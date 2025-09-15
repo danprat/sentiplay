@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Google Play Review Scraper</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
@@ -23,81 +23,128 @@
         <!-- Alert Container -->
         <div id="alert-container" class="alert hidden"></div>
 
-        <!-- Loading Indicator -->
-        <div id="loading" class="loading">
-            <div class="spinner"></div>
-            <p>Scraping and processing reviews...</p>
+        <!-- Progress Container -->
+        <div id="progress-container" class="progress-container" style="display: none;">
+            <div class="progress-card">
+                <h3>🔄 Sedang Memproses...</h3>
+                <div class="progress-steps">
+                    <div class="step" id="step-1">
+                        <div class="step-icon">1</div>
+                        <div class="step-text">Memulai scraping reviews...</div>
+                        <div class="step-status">⏳</div>
+                    </div>
+                    <div class="step" id="step-2">
+                        <div class="step-icon">2</div>
+                        <div class="step-text">Mengambil data dari Google Play...</div>
+                        <div class="step-status">⏳</div>
+                    </div>
+                    <div class="step" id="step-3">
+                        <div class="step-icon">3</div>
+                        <div class="step-text">Menyimpan dan memproses data...</div>
+                        <div class="step-status">⏳</div>
+                    </div>
+                    <div class="step" id="step-4">
+                        <div class="step-icon">4</div>
+                        <div class="step-text">Membuat visualisasi...</div>
+                        <div class="step-status">⏳</div>
+                    </div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+                <div class="progress-text">
+                    <span id="progress-percentage">0%</span> - 
+                    <span id="progress-message">Memulai proses...</span>
+                </div>
+            </div>
         </div>
 
         <!-- Scrape Form -->
-        <section class="form-section">
-            <h2>Scrape Google Play Reviews</h2>
-            <form id="scrape-form">
-                <div class="row">
-                    <div class="col">
-                        <div class="form-group">
-                            <label for="app_id">App ID</label>
-                            <input type="text" id="app_id" name="app_id" class="form-control" 
-                                   placeholder="com.example.app" required>
+        <section class="form-section card">
+            <div class="card-header">
+                <h2 class="card-title">Scrape Google Play Reviews</h2>
+                <p class="card-description">Dapatkan dan analisis review aplikasi Android dari Google Play Store</p>
+            </div>
+            <div class="card-content">
+                <form id="scrape-form" class="space-y-4">
+                    <div class="row">
+                        <div class="col">
+                            <div class="form-group">
+                                <label for="app_id" class="form-label">App ID</label>
+                                <input type="text" id="app_id" name="app_id" class="form-control" 
+                                       placeholder="com.example.app" required>
+                            </div>
                         </div>
-                    </div>
-                    <div class="col">
-                        <div class="form-group">
-                            <label for="lang">Language</label>
-                            <select id="lang" name="lang" class="form-control">
-                                <option value="id">Indonesian (id)</option>
-                                <option value="en">English (en)</option>
-                                <option value="es">Spanish (es)</option>
-                                <option value="fr">French (fr)</option>
-                                <option value="de">German (de)</option>
-                            </select>
+                        <div class="col">
+                            <div class="form-group">
+                                <label for="lang" class="form-label">Language</label>
+                                <select id="lang" name="lang" class="form-control">
+                                    <option value="id">Indonesian (id)</option>
+                                    <option value="en">English (en)</option>
+                                    <option value="es">Spanish (es)</option>
+                                    <option value="fr">French (fr)</option>
+                                    <option value="de">German (de)</option>
+                                </select>
+                            </div>
                         </div>
-                    </div>
-                    <div class="col">
-                        <div class="form-group">
-                            <label for="country">Country</label>
-                            <select id="country" name="country" class="form-control">
-                                <option value="id">Indonesia (id)</option>
-                                <option value="us">United States (us)</option>
-                                <option value="gb">United Kingdom (gb)</option>
-                                <option value="ca">Canada (ca)</option>
-                                <option value="au">Australia (au)</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col">
-                        <div class="form-group">
-                            <label for="count">Number of Reviews</label>
-                            <input type="number" id="count" name="count" class="form-control" 
-                                   value="100" min="1" max="1000">
-                        </div>
-                    </div>
-                    <div class="col">
-                        <div class="form-group">
-                            <label>Filter by Rating</label>
-                            <div class="rating-filters">
-                                <div class="rating-btn" data-rating="1">1 ★</div>
-                                <div class="rating-btn" data-rating="2">2 ★</div>
-                                <div class="rating-btn" data-rating="3">3 ★</div>
-                                <div class="rating-btn" data-rating="4">4 ★</div>
-                                <div class="rating-btn" data-rating="5">5 ★</div>
+                        <div class="col">
+                            <div class="form-group">
+                                <label for="country" class="form-label">Country</label>
+                                <select id="country" name="country" class="form-control">
+                                    <option value="id">Indonesia (id)</option>
+                                    <option value="us">United States (us)</option>
+                                    <option value="gb">United Kingdom (gb)</option>
+                                    <option value="ca">Canada (ca)</option>
+                                    <option value="au">Australia (au)</option>
+                                </select>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <button type="submit" class="btn btn-primary">
-                    <span>Scrape Reviews</span>
-                </button>
-            </form>
+                    <div class="row">
+                        <div class="col">
+                            <div class="form-group">
+                                <label for="count" class="form-label">Number of Reviews</label>
+                                <input type="number" id="count" name="count" class="form-control" 
+                                       value="100" min="1" max="1000">
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="form-group">
+                                <label for="sort" class="form-label">Sort Reviews</label>
+                                <select id="sort" name="sort" class="form-control">
+                                    <option value="NEWEST">Newest</option>
+                                    <option value="MOST_RELEVANT">Most Relevant</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="form-group">
+                                <label class="form-label">Filter by Rating</label>
+                                <div class="rating-filters">
+                                    <div class="rating-btn" data-rating="1">1 ★</div>
+                                    <div class="rating-btn" data-rating="2">2 ★</div>
+                                    <div class="rating-btn" data-rating="3">3 ★</div>
+                                    <div class="rating-btn" data-rating="4">4 ★</div>
+                                    <div class="rating-btn" data-rating="5">5 ★</div>
+                                </div>
+                                <small style="color: hsl(var(--muted-foreground)); font-size: 0.75rem; margin-top: 0.5rem; display: block;">
+                                    Klik untuk memilih rating tertentu, atau biarkan kosong untuk semua rating
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">
+                        <span>🚀 Scrape Reviews</span>
+                    </button>
+                </form>
+            </div>
         </section>
 
         <!-- Results Section -->
-        <section id="results-section" class="results-section">
-            <h2 class="section-title">Analysis Results</h2>
+        <section id="results-section" class="results-section space-y-6">
+            <h2 class="section-title">📊 Analysis Results</h2>
 
             <!-- Statistics -->
             <div class="stats-container">
@@ -119,19 +166,19 @@
 
             <!-- WordCloud -->
             <div class="wordcloud-container">
-                <h3>Word Cloud</h3>
+                <h3>☁️ Word Cloud</h3>
                 <img id="wordcloud-image" alt="Word Cloud" style="max-width: 100%; height: auto;">
             </div>
 
             <!-- Rating Chart -->
             <div class="rating-chart-container">
-                <h3>Rating Distribution</h3>
+                <h3>📈 Rating Distribution</h3>
                 <img id="rating-chart" alt="Rating Distribution Chart" style="width: 100%; height: 300px;">
             </div>
 
             <!-- Reviews Table -->
             <div class="reviews-table-container">
-                <h3>Reviews</h3>
+                <h3>💬 Reviews</h3>
                 <table id="reviews-table">
                     <thead>
                         <tr>

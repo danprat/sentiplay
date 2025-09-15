@@ -22,17 +22,22 @@ scraper = PlayStoreScraper()
 preprocessor = TextPreprocessor()
 visualizer = DataVisualizer()
 
-def scrape_reviews_background(session_id, app_id, lang, country, filter_score, count):
+def scrape_reviews_background(session_id, app_id, lang, country, filter_score, count, sort='NEWEST'):
     """Background function to scrape reviews"""
     try:
         # Update session status to scraping
         db_manager.update_session_status(session_id, 'scraping')
+        
+        # Convert sort string to Sort enum
+        from google_play_scraper import Sort
+        sort_enum = Sort.NEWEST if sort == 'NEWEST' else Sort.MOST_RELEVANT
         
         # Scrape reviews
         reviews, _ = scraper.scrape_reviews(
             app_id=app_id,
             lang=lang,
             country=country,
+            sort=sort_enum,
             filter_score_with=filter_score,
             count=count
         )
@@ -75,6 +80,7 @@ def scrape_reviews():
         country = data.get('country', 'us')
         filter_score = data.get('filter_score')
         count = data.get('count', 100)
+        sort = data.get('sort', 'NEWEST')
         
         # Validate required parameters
         if not app_id:
@@ -92,7 +98,7 @@ def scrape_reviews():
         # Start background scraping task
         thread = threading.Thread(
             target=scrape_reviews_background,
-            args=(session_id, app_id, lang, country, filter_score, count)
+            args=(session_id, app_id, lang, country, filter_score, count, sort)
         )
         thread.start()
         
