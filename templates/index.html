@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Play Review Scraper</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <span class="logo-icon">📊</span>
+                    <h1>Google Play Review Scraper</h1>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Alert Container -->
+        <div id="alert-container" class="alert hidden"></div>
+
+        <!-- Loading Indicator -->
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Scraping and processing reviews...</p>
+        </div>
+
+        <!-- Scrape Form -->
+        <section class="form-section">
+            <h2>Scrape Google Play Reviews</h2>
+            <form id="scrape-form">
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="app_id">App ID</label>
+                            <input type="text" id="app_id" name="app_id" class="form-control" 
+                                   placeholder="com.example.app" required>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="lang">Language</label>
+                            <select id="lang" name="lang" class="form-control">
+                                <option value="id">Indonesian (id)</option>
+                                <option value="en">English (en)</option>
+                                <option value="es">Spanish (es)</option>
+                                <option value="fr">French (fr)</option>
+                                <option value="de">German (de)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="country">Country</label>
+                            <select id="country" name="country" class="form-control">
+                                <option value="id">Indonesia (id)</option>
+                                <option value="us">United States (us)</option>
+                                <option value="gb">United Kingdom (gb)</option>
+                                <option value="ca">Canada (ca)</option>
+                                <option value="au">Australia (au)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="count">Number of Reviews</label>
+                            <input type="number" id="count" name="count" class="form-control" 
+                                   value="100" min="1" max="1000">
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label>Filter by Rating</label>
+                            <div class="rating-filters">
+                                <div class="rating-btn" data-rating="1">1 ★</div>
+                                <div class="rating-btn" data-rating="2">2 ★</div>
+                                <div class="rating-btn" data-rating="3">3 ★</div>
+                                <div class="rating-btn" data-rating="4">4 ★</div>
+                                <div class="rating-btn" data-rating="5">5 ★</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                    <span>Scrape Reviews</span>
+                </button>
+            </form>
+        </section>
+
+        <!-- Results Section -->
+        <section id="results-section" class="results-section">
+            <h2 class="section-title">Analysis Results</h2>
+
+            <!-- Statistics -->
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div class="stat-label">Total Reviews</div>
+                    <div id="total-reviews" class="stat-value">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Average Rating</div>
+                    <div id="average-rating" class="stat-value">0.0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Most Common Words</div>
+                    <div id="most-common-words" class="most-common-words">
+                        <!-- Words will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- WordCloud -->
+            <div class="wordcloud-container">
+                <h3>Word Cloud</h3>
+                <img id="wordcloud-image" alt="Word Cloud" style="max-width: 100%; height: auto;">
+            </div>
+
+            <!-- Rating Chart -->
+            <div class="rating-chart-container">
+                <h3>Rating Distribution</h3>
+                <img id="rating-chart" alt="Rating Distribution Chart" style="width: 100%; height: 300px;">
+            </div>
+
+            <!-- Reviews Table -->
+            <div class="reviews-table-container">
+                <h3>Reviews</h3>
+                <table id="reviews-table">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Rating</th>
+                            <th>Date</th>
+                            <th>Review</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Reviews will be populated by JavaScript -->
+                    </tbody>
+                </table>
+
+                <!-- Pagination -->
+                <div id="pagination" class="pagination">
+                    <!-- Pagination buttons will be populated by JavaScript -->
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

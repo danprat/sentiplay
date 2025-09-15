@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  sentiplay:
+    build: .
+    ports:
+      - "5000:5000"
+    volumes:
+      - sentiplay_data:/app/data
+    environment:
+      - FLASK_ENV=production
+      - PYTHONPATH=/app
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.prod.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - sentiplay
+    restart: unless-stopped
+
+volumes:
+  sentiplay_data:
