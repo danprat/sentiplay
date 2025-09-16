@@ -87,6 +87,11 @@ def index():
     """Render the main page"""
     return render_template('index.html')
 
+@app.route('/health')
+def health():
+    """Health check endpoint for Docker/Kubernetes"""
+    return jsonify({"status": "healthy", "service": "sentiplay"}), 200
+
 @app.route('/api/scrape', methods=['POST'])
 def scrape_reviews():
     """API endpoint to start scraping reviews"""

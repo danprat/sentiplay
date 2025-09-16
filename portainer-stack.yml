@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  sentiplay:
+    image: python:3.9-slim
+    container_name: sentiplay
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    volumes:
+      - sentiplay_data:/app/data
+    environment:
+      - FLASK_ENV=production
+      - PYTHONUNBUFFERED=1
+      - TZ=Asia/Jakarta
+    working_dir: /app
+    command: |
+      bash -c "
+        echo '🚀 Starting SentiPlay installation...'
+        apt-get update && apt-get install -y git gcc g++ curl
+        git clone https://github.com/danprat/sentiplay.git /app
+        cd /app
+        pip install --no-cache-dir -r requirements.txt
+        python migrate_database.py
+        echo '✅ Installation complete! Starting application...'
+        python app.py --host=0.0.0.0 --port=5000
+      "
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.sentiplay.rule=Host(\`localhost\`)"
+      - "traefik.http.services.sentiplay.loadbalancer.server.port=5000"
+
+volumes:
+  sentiplay_data:
+    driver: local
+
+networks:
+  default:
+    name: sentiplay_network

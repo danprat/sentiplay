@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+  sentiplay:
+    image: python:3.9-slim
+    container_name: sentiplay-app
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    volumes:
+      - sentiplay_data:/app/data
+      - sentiplay_code:/app
+    working_dir: /app
+    environment:
+      - FLASK_ENV=production
+      - PYTHONPATH=/app
+      - TZ=Asia/Jakarta
+    command: >
+      bash -c "
+        if [ ! -f /app/app.py ]; then
+          echo 'Cloning repository...'
+          apt-get update && apt-get install -y git gcc g++ && 
+          git clone https://github.com/danprat/sentiplay.git /tmp/sentiplay &&
+          cp -r /tmp/sentiplay/* /app/ &&
+          rm -rf /tmp/sentiplay
+        fi &&
+        echo 'Installing dependencies...' &&
+        pip install --no-cache-dir -r requirements.txt &&
+        echo 'Initializing database...' &&
+        python migrate_database.py &&
+        echo 'Starting SentiPlay application...' &&
+        python app.py --host=0.0.0.0 --port=5000
+      "
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.sentiplay.rule=Host(`sentiplay.localhost`)"
+      - "traefik.http.services.sentiplay.loadbalancer.server.port=5000"
+
+  nginx:
+    image: nginx:alpine
+    container_name: sentiplay-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - nginx_cache:/var/cache/nginx
+      - nginx_logs:/var/log/nginx
+    depends_on:
+      - sentiplay
+    environment:
+      - TZ=Asia/Jakarta
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.nginx.rule=Host(`sentiplay-web.localhost`)"
+
+volumes:
+  sentiplay_data:
+    driver: local
+  sentiplay_code:
+    driver: local
+  nginx_cache:
+    driver: local
+  nginx_logs:
+    driver: local
+
+networks:
+  default:
+    name: sentiplay_network
+    driver: bridge
