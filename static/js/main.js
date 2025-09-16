@@ -235,6 +235,23 @@ async function loadStatistics(sessionId) {
             averageRatingEl.textContent = typeof stats.average_rating !== 'undefined' ? stats.average_rating : '-';
         }
 
+        const reviewPeriodEl = document.getElementById('review-period');
+        if (reviewPeriodEl) {
+            const period = stats.review_period || {};
+            const start = period.start;
+            const end = period.end;
+
+            if (start && end) {
+                reviewPeriodEl.textContent = start === end ? start : `${start} - ${end}`;
+            } else if (start) {
+                reviewPeriodEl.textContent = start;
+            } else if (end) {
+                reviewPeriodEl.textContent = end;
+            } else {
+                reviewPeriodEl.textContent = '-';
+            }
+        }
+
         // Update most common words
         const wordsContainer = document.getElementById('most-common-words');
         if (wordsContainer) {

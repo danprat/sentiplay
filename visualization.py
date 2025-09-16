@@ -6,11 +6,27 @@ import numpy as np
 from wordcloud import WordCloud
 from io import BytesIO
 from typing import Optional, Dict, List, Tuple
+from datetime import datetime
 import base64
 from database import DatabaseManager
 
 class DataVisualizer:
     """Class to handle data visualization including wordclouds and charts"""
+
+    MONTH_NAMES_ID = {
+        1: 'Januari',
+        2: 'Februari',
+        3: 'Maret',
+        4: 'April',
+        5: 'Mei',
+        6: 'Juni',
+        7: 'Juli',
+        8: 'Agustus',
+        9: 'September',
+        10: 'Oktober',
+        11: 'November',
+        12: 'Desember'
+    }
     
     def __init__(self, database_path: str = 'data/reviews.db'):
         """
@@ -29,6 +45,37 @@ class DataVisualizer:
                 plt.style.use('seaborn')
             except:
                 pass  # Use default style
+
+    def _parse_datetime(self, value: Optional[str]) -> Optional[datetime]:
+        """Convert database datetime strings to datetime objects."""
+        if value is None or value == '':
+            return None
+
+        if isinstance(value, datetime):
+            return value
+
+        # Normalize common ISO suffix
+        if isinstance(value, str):
+            cleaned_value = value.replace('Z', '+00:00')
+            try:
+                return datetime.fromisoformat(cleaned_value)
+            except ValueError:
+                for fmt in ('%Y-%m-%d %H:%M:%S', '%Y-%m-%d'):
+                    try:
+                        return datetime.strptime(cleaned_value, fmt)
+                    except ValueError:
+                        continue
+
+        return None
+
+    def _format_indonesian_date(self, value: Optional[str]) -> Optional[str]:
+        """Format a datetime value into Indonesian date representation."""
+        dt_value = self._parse_datetime(value)
+        if not dt_value:
+            return None
+
+        month_name = self.MONTH_NAMES_ID.get(dt_value.month, dt_value.strftime('%B'))
+        return f"{dt_value.day} {month_name} {dt_value.year}"
     
     def generate_wordcloud(self, session_id: int, width: int = 800, height: int = 400) -> Optional[bytes]:
         """
@@ -271,7 +318,18 @@ class DataVisualizer:
             WHERE session_id = ?
         ''', (session_id,))
         stats['total_reviews'] = cursor.fetchone()[0]
-        
+
+        # Review date range
+        cursor.execute('''
+            SELECT MIN(at), MAX(at) FROM raw_reviews 
+            WHERE session_id = ?
+        ''', (session_id,))
+        min_date, max_date = cursor.fetchone()
+        stats['review_period'] = {
+            'start': self._format_indonesian_date(min_date),
+            'end': self._format_indonesian_date(max_date)
+        }
+
         # Average rating
         cursor.execute('''
             SELECT AVG(score) FROM raw_reviews 

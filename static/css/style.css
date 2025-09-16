@@ -331,6 +331,14 @@ h1 {
   line-height: 1;
 }
 
+.stat-period-value {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: hsl(var(--foreground));
+  line-height: 1.4;
+  white-space: normal;
+}
+
 .stat-label {
   color: hsl(var(--muted-foreground));
   font-size: 0.875rem;
