@@ -25,7 +25,7 @@
   
   /* Success color */
   --success: 142.1 76.2% 36.3%;
-  --success-foreground: 355.7 100% 97.3%;
+  --success-foreground: 142.1 100% 12%;
   
   /* Warning color */  
   --warning: 32.2 95% 44.1%;
@@ -612,9 +612,17 @@ tr:hover {
 }
 
 .alert-success {
-  background-color: hsl(var(--success) / 0.1);
+  background-color: hsl(142.1 76.2% 90%);
   color: hsl(var(--success-foreground));
-  border-color: hsl(var(--success) / 0.2);
+  border: 2px solid hsl(var(--success));
+  font-weight: 600;
+}
+
+.alert-info {
+  background-color: hsl(217.2 91.2% 90%);
+  color: hsl(217.2 91.2% 20%);
+  border: 2px solid hsl(217.2 91.2% 59.8%);
+  font-weight: 600;
 }
 
 .alert-danger {
