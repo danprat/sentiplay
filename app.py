@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, jsonify, send_file, Response
+from flask_cors import CORS
 import os
 import sqlite3
 from dotenv import load_dotenv
@@ -16,6 +17,24 @@ load_dotenv()
 
 # Create Flask app
 app = Flask(__name__)
+
+# Configure CORS
+CORS(app, resources={
+    r"/api/*": {
+        "origins": ["*"],  # Allow all origins
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization", "Access-Control-Allow-Credentials"],
+        "supports_credentials": True
+    }
+})
+
+# Add CORS headers to all responses
+@app.after_request
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    return response
 
 # Initialize components
 db_manager = DatabaseManager()
@@ -91,6 +110,16 @@ def index():
 def health():
     """Health check endpoint for Docker/Kubernetes"""
     return jsonify({"status": "healthy", "service": "sentiplay"}), 200
+
+@app.before_request
+def handle_preflight():
+    """Handle CORS preflight requests"""
+    if request.method == "OPTIONS":
+        response = Response()
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+        response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+        return response
 
 @app.route('/api/scrape', methods=['POST'])
 def scrape_reviews():

@@ -8,16 +8,7 @@ from io import BytesIO
 from typing import Optional, Dict, List, Tuple
 from datetime import datetime
 import base64
-from database impor        app_info = {
-            'app_id': app_id,
-            'title': session_info.get('app_title'),
-            'description': session_info.get('app_description'),
-            'genre': session_info.get('app_genre'),
-            'genre_id': session_info.get('app_genre_id'),
-            'version': session_info.get('app_version'),
-            'country': country,
-            'lang': lang
-        }anager
+from database import DatabaseManager
 
 class DataVisualizer:
     """Class to handle data visualization including wordclouds and charts"""

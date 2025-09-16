@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SentiPlay CORS Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            background: #f8f9fa;
+            border-left: 4px solid #28a745;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .error {
+            border-left-color: #dc3545;
+            background: #f8d7da;
+        }
+        .input-group {
+            margin: 10px 0;
+        }
+        input, select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+        .loading {
+            color: #007bff;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 SentiPlay CORS Test</h1>
+        <p>Test CORS functionality for SentiPlay API endpoints</p>
+
+        <!-- Health Check Test -->
+        <div class="test-section">
+            <h3>1. Health Check Test</h3>
+            <p>Test basic API connectivity</p>
+            <button onclick="testHealth()">Test Health Endpoint</button>
+            <div id="health-result" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- Scraping Test -->
+        <div class="test-section">
+            <h3>2. Start Scraping Test</h3>
+            <p>Test scraping initiation with CORS</p>
+            <div class="input-group">
+                <input type="text" id="app-id" placeholder="App ID (e.g., com.duolingo)" value="com.duolingo">
+                <input type="number" id="review-count" placeholder="Count" value="10" min="1" max="100">
+                <select id="country">
+                    <option value="id">Indonesia</option>
+                    <option value="us">United States</option>
+                </select>
+            </div>
+            <button onclick="testScraping()">Start Scraping</button>
+            <div id="scraping-result" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- Status Check Test -->
+        <div class="test-section">
+            <h3>3. Status Check Test</h3>
+            <p>Check status of a scraping session</p>
+            <div class="input-group">
+                <input type="number" id="session-id" placeholder="Session ID" min="1">
+                <button onclick="testStatus()">Check Status</button>
+            </div>
+            <div id="status-result" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- Statistics Test -->
+        <div class="test-section">
+            <h3>4. Statistics Test</h3>
+            <p>Get statistics for a completed session</p>
+            <div class="input-group">
+                <input type="number" id="stats-session-id" placeholder="Session ID" min="1">
+                <button onclick="testStatistics()">Get Statistics</button>
+            </div>
+            <div id="statistics-result" class="result" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://sentiplay.ruangdany.com';
+
+        function showResult(elementId, content, isError = false) {
+            const element = document.getElementById(elementId);
+            element.textContent = content;
+            element.style.display = 'block';
+            element.className = isError ? 'result error' : 'result';
+        }
+
+        function showLoading(elementId) {
+            showResult(elementId, 'Loading...', false);
+            document.getElementById(elementId).className = 'result loading';
+        }
+
+        async function testHealth() {
+            showLoading('health-result');
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const data = await response.json();
+                showResult('health-result', `✅ Success!\nStatus: ${response.status}\nResponse: ${JSON.stringify(data, null, 2)}`);
+            } catch (error) {
+                showResult('health-result', `❌ Error: ${error.message}`, true);
+            }
+        }
+
+        async function testScraping() {
+            showLoading('scraping-result');
+            const appId = document.getElementById('app-id').value;
+            const count = parseInt(document.getElementById('review-count').value);
+            const country = document.getElementById('country').value;
+
+            if (!appId) {
+                showResult('scraping-result', '❌ Please enter an App ID', true);
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/scrape`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        app_id: appId,
+                        count: count,
+                        country: country,
+                        lang: country === 'id' ? 'id' : 'en'
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult('scraping-result', `✅ Scraping Started!\nSession ID: ${data.session_id}\nStatus: ${data.status}\nFull Response: ${JSON.stringify(data, null, 2)}`);
+                    // Auto-fill session ID fields
+                    document.getElementById('session-id').value = data.session_id;
+                    document.getElementById('stats-session-id').value = data.session_id;
+                } else {
+                    showResult('scraping-result', `❌ Error ${response.status}: ${JSON.stringify(data, null, 2)}`, true);
+                }
+            } catch (error) {
+                showResult('scraping-result', `❌ CORS or Network Error: ${error.message}`, true);
+            }
+        }
+
+        async function testStatus() {
+            showLoading('status-result');
+            const sessionId = document.getElementById('session-id').value;
+
+            if (!sessionId) {
+                showResult('status-result', '❌ Please enter a Session ID', true);
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/scrape/status/${sessionId}`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult('status-result', `✅ Status Retrieved!\nSession: ${sessionId}\nStatus: ${data.status}\nReviews: ${data.review_count}\nProcessed: ${data.processed_count}\nFull Response: ${JSON.stringify(data, null, 2)}`);
+                } else {
+                    showResult('status-result', `❌ Error ${response.status}: ${JSON.stringify(data, null, 2)}`, true);
+                }
+            } catch (error) {
+                showResult('status-result', `❌ CORS or Network Error: ${error.message}`, true);
+            }
+        }
+
+        async function testStatistics() {
+            showLoading('statistics-result');
+            const sessionId = document.getElementById('stats-session-id').value;
+
+            if (!sessionId) {
+                showResult('statistics-result', '❌ Please enter a Session ID', true);
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/statistics/${sessionId}`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult('statistics-result', `✅ Statistics Retrieved!\nTotal Reviews: ${data.total_reviews || 'N/A'}\nSentiment Distribution: ${JSON.stringify(data.sentiment_distribution || {}, null, 2)}\nFull Response: ${JSON.stringify(data, null, 2)}`);
+                } else {
+                    showResult('statistics-result', `❌ Error ${response.status}: ${JSON.stringify(data, null, 2)}`, true);
+                }
+            } catch (error) {
+                showResult('statistics-result', `❌ CORS or Network Error: ${error.message}`, true);
+            }
+        }
+
+        // Test CORS on page load
+        window.addEventListener('load', () => {
+            console.log('🚀 SentiPlay CORS Test Page Loaded');
+            console.log('API Base URL:', API_BASE);
+            
+            // Auto-test health on load
+            setTimeout(testHealth, 1000);
+        });
+    </script>
+</body>
+</html>

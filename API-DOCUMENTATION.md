@@ -321,9 +321,46 @@ Currently, the API is **publicly accessible** without authentication.
 All API responses include:
 ```
 Content-Type: application/json (for JSON endpoints)
-X-RateLimit-Remaining: 95
-X-RateLimit-Reset: 1695729600
 Access-Control-Allow-Origin: *
+Access-Control-Allow-Headers: Content-Type,Authorization
+Access-Control-Allow-Methods: GET,PUT,POST,DELETE,OPTIONS
+```
+
+## CORS Support
+
+The API fully supports **Cross-Origin Resource Sharing (CORS)**:
+
+- ✅ **All Origins Allowed**: `Access-Control-Allow-Origin: *`
+- ✅ **All HTTP Methods**: GET, POST, PUT, DELETE, OPTIONS
+- ✅ **Common Headers**: Content-Type, Authorization
+- ✅ **Preflight Requests**: OPTIONS requests handled automatically
+- ✅ **Client-Side JavaScript**: Can be called directly from web browsers
+
+### Example JavaScript Fetch:
+
+```javascript
+// Fetch API example
+fetch('https://sentiplay.ruangdany.com/api/scrape', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    app_id: 'com.duolingo',
+    count: 50
+  })
+})
+.then(response => response.json())
+.then(data => console.log(data))
+.catch(error => console.error('Error:', error));
+
+// Axios example
+axios.post('https://sentiplay.ruangdany.com/api/scrape', {
+  app_id: 'com.duolingo',
+  count: 50
+})
+.then(response => console.log(response.data))
+.catch(error => console.error('Error:', error));
 ```
 
 ---
