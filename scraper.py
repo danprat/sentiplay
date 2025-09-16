@@ -54,6 +54,15 @@ class PlayStoreScraper:
         except Exception as exc:  # pragma: no cover - network errors shouldn't break scraping
             print(f"Unable to fetch app metadata for {app_id}: {exc}")
             return None
+        
+        # Debug: Print raw metadata structure for troubleshooting
+        print(f"Debug - Raw metadata keys: {list(metadata.keys())}")
+        if 'genre' in metadata:
+            print(f"Debug - Raw genre: {metadata['genre']} (type: {type(metadata['genre'])})")
+        if 'categories' in metadata:
+            print(f"Debug - Raw categories: {metadata['categories']} (type: {type(metadata['categories'])})")
+        if 'genreId' in metadata:
+            print(f"Debug - Raw genreId: {metadata['genreId']} (type: {type(metadata['genreId'])})")
 
         raw_description = metadata.get('shortDescription') or metadata.get('summary') or metadata.get('description') or ''
         if not raw_description and metadata.get('descriptionHTML'):
@@ -64,25 +73,73 @@ class PlayStoreScraper:
         if len(clean_description) > 1200:
             clean_description = clean_description[:1197] + '...'
 
-        categories = metadata.get('categories') or metadata.get('category') or metadata.get('genre')
-        if isinstance(categories, (list, tuple)):
-            category_names = []
-            for cat in categories:
-                if cat:
-                    if isinstance(cat, dict) and 'name' in cat:
-                        category_names.append(cat['name'])
-                    else:
-                        category_names.append(str(cat))
-            categories = ', '.join(category_names)
+        # Process categories - handle various formats from Google Play
+        categories_raw = metadata.get('categories') or metadata.get('category')
+        categories = self._parse_categories(categories_raw)
+        
+        # Process genre - also might be a dict with name field
+        genre_raw = metadata.get('genre')
+        genre = self._parse_single_category(genre_raw)
+        
+        # Process genre_id
+        genre_id_raw = metadata.get('genreId') or metadata.get('categoryId')
+        genre_id = self._parse_category_id(genre_id_raw)
 
         return {
             'title': metadata.get('title'),
             'description': clean_description,
-            'genre': metadata.get('genre') or metadata.get('category'),
-            'genre_id': metadata.get('genreId') or metadata.get('categoryId'),
+            'genre': genre,
+            'genre_id': genre_id,
             'categories': categories,
             'version': metadata.get('version')
         }
+    
+    def _parse_categories(self, categories_raw) -> str:
+        """Parse categories from various formats to clean string."""
+        if not categories_raw:
+            return ''
+            
+        if isinstance(categories_raw, (list, tuple)):
+            category_names = []
+            for cat in categories_raw:
+                if cat:
+                    if isinstance(cat, dict) and 'name' in cat:
+                        category_names.append(cat['name'])
+                    elif isinstance(cat, str):
+                        category_names.append(cat)
+                    else:
+                        category_names.append(str(cat))
+            return ', '.join(category_names)
+        elif isinstance(categories_raw, dict) and 'name' in categories_raw:
+            return categories_raw['name']
+        elif isinstance(categories_raw, str):
+            return categories_raw
+        else:
+            return str(categories_raw) if categories_raw else ''
+    
+    def _parse_single_category(self, category_raw) -> str:
+        """Parse a single category field to clean string."""
+        if not category_raw:
+            return ''
+            
+        if isinstance(category_raw, dict) and 'name' in category_raw:
+            return category_raw['name']
+        elif isinstance(category_raw, str):
+            return category_raw
+        else:
+            return str(category_raw) if category_raw else ''
+    
+    def _parse_category_id(self, category_id_raw) -> str:
+        """Parse category ID to clean string."""
+        if not category_id_raw:
+            return ''
+            
+        if isinstance(category_id_raw, dict) and 'id' in category_id_raw:
+            return category_id_raw['id']
+        elif isinstance(category_id_raw, str):
+            return category_id_raw
+        else:
+            return str(category_id_raw) if category_id_raw else ''
     
     def _create_scraping_session(self, app_id: str, lang: str, country: str, 
                                 filter_score: Optional[int], count: int) -> int:
