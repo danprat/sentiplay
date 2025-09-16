@@ -1,6 +1,7 @@
-from google_play_scraper import reviews, Sort
+from google_play_scraper import reviews, Sort, app as gplay_app
 import sqlite3
-import time
+import re
+from html import unescape
 from typing import List, Dict, Tuple, Optional
 from database import DatabaseManager
 
@@ -45,6 +46,36 @@ class PlayStoreScraper:
         )
         
         return result, len(result)
+
+    def get_app_details(self, app_id: str, lang: str = 'en', country: str = 'us') -> Optional[Dict[str, Optional[str]]]:
+        """Fetch metadata for an app from Google Play."""
+        try:
+            metadata = gplay_app(app_id, lang=lang, country=country)
+        except Exception as exc:  # pragma: no cover - network errors shouldn't break scraping
+            print(f"Unable to fetch app metadata for {app_id}: {exc}")
+            return None
+
+        raw_description = metadata.get('shortDescription') or metadata.get('summary') or metadata.get('description') or ''
+        if not raw_description and metadata.get('descriptionHTML'):
+            raw_description = metadata.get('descriptionHTML')
+
+        # Strip HTML tags and unescape entities
+        clean_description = unescape(re.sub(r'<[^>]+>', ' ', raw_description or '')).strip()
+        if len(clean_description) > 1200:
+            clean_description = clean_description[:1197] + '...'
+
+        categories = metadata.get('categories') or metadata.get('category') or metadata.get('genre')
+        if isinstance(categories, (list, tuple)):
+            categories = ', '.join([str(cat) for cat in categories if cat])
+
+        return {
+            'title': metadata.get('title'),
+            'description': clean_description,
+            'genre': metadata.get('genre') or metadata.get('category'),
+            'genre_id': metadata.get('genreId') or metadata.get('categoryId'),
+            'categories': categories,
+            'version': metadata.get('version')
+        }
     
     def _create_scraping_session(self, app_id: str, lang: str, country: str, 
                                 filter_score: Optional[int], count: int) -> int:

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Google Play Review Scraper</title>
+    <title>Sentiplay - Analisis Sentimen Akademik</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
@@ -13,7 +13,7 @@
             <div class="header-content">
                 <div class="logo">
                     <span class="logo-icon">📊</span>
-                    <h1>Google Play Review Scraper</h1>
+                    <h1>Sentiplay - Analisis Sentimen Akademik</h1>
                 </div>
             </div>
         </div>
@@ -62,8 +62,8 @@
         <!-- Scrape Form -->
         <section class="form-section card">
             <div class="card-header">
-                <h2 class="card-title">Scrape Google Play Reviews</h2>
-                <p class="card-description">Dapatkan dan analisis review aplikasi Android dari Google Play Store</p>
+                <h2 class="card-title">Analisis Sentimen Google Play Reviews</h2>
+                <p class="card-description">Platform analisis sentimen akademik untuk review aplikasi Android dari Google Play Store</p>
             </div>
             <div class="card-content">
                 <form id="scrape-form" class="space-y-4">
@@ -146,6 +146,39 @@
         <section id="results-section" class="results-section space-y-6">
             <h2 class="section-title">📊 Analysis Results</h2>
 
+            <!-- App Information -->
+            <div id="app-info-section" class="app-info-card card" style="display: none;">
+                <div class="card-header">
+                    <h3 class="card-title">ℹ️ Informasi Aplikasi</h3>
+                    <p class="card-description" id="app-info-app-id"></p>
+                </div>
+                <div class="card-content">
+                    <div class="app-info-header">
+                        <h4 id="app-info-title" class="app-info-title">-</h4>
+                        <span id="app-info-version" class="app-version-badge">Versi tidak diketahui</span>
+                    </div>
+                    <p id="app-info-description" class="app-info-description">Tidak ada deskripsi tersedia.</p>
+                    <div class="app-info-meta">
+                        <div>
+                            <span class="meta-label">Genre</span>
+                            <span id="app-info-genre">-</span>
+                        </div>
+                        <div>
+                            <span class="meta-label">Genre ID</span>
+                            <span id="app-info-genre-id">-</span>
+                        </div>
+                        <div>
+                            <span class="meta-label">Kategori</span>
+                            <span id="app-info-categories">-</span>
+                        </div>
+                        <div>
+                            <span class="meta-label">Locale</span>
+                            <span id="app-info-locale">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Statistics -->
             <div class="stats-container">
                 <div class="stat-card">
@@ -178,7 +211,12 @@
 
             <!-- Reviews Table -->
             <div class="reviews-table-container">
-                <h3>💬 Reviews</h3>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h3>💬 Reviews</h3>
+                    <button id="download-csv-btn" class="btn btn-secondary" style="display: none;">
+                        📥 Download CSV
+                    </button>
+                </div>
                 <table id="reviews-table">
                     <thead>
                         <tr>

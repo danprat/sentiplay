@@ -44,10 +44,14 @@ class DataVisualizer:
         """
         # Get session information
         conn = sqlite3.connect(self.database_path)
+        conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
         
         cursor.execute('''
-            SELECT app_id, lang, country FROM scraping_sessions WHERE id = ?
+            SELECT app_id, lang, country, app_title, app_description, app_genre,
+                   app_genre_id, app_categories, app_version
+            FROM scraping_sessions 
+            WHERE id = ?
         ''', (session_id,))
         
         session_row = cursor.fetchone()
@@ -55,7 +59,10 @@ class DataVisualizer:
             conn.close()
             return None
         
-        app_id, lang, country = session_row
+        session_info = dict(session_row)
+        app_id = session_info.get('app_id')
+        lang = session_info.get('lang')
+        country = session_info.get('country')
         
         # Get all processed reviews for this session
         cursor.execute('''
@@ -147,35 +154,67 @@ class DataVisualizer:
         if not rows:
             return None
         
-        # Prepare data for chart
-        scores = [row[0] for row in rows]
-        counts = [row[1] for row in rows]
-        
+        # Prepare data for chart - ensure complete 1-5 stars
+        rating_counts = {rating: 0 for rating in range(1, 6)}
+        for score, count in rows:
+            if score in rating_counts:
+                rating_counts[score] = count
+
+        ratings = sorted(rating_counts.keys(), reverse=True)  # Show highest rating at top
+        counts = [rating_counts[r] for r in ratings]
+        total_reviews = sum(counts)
+
+        if total_reviews == 0:
+            return None
+
+        percentages = [count / total_reviews * 100 for count in counts]
+
         # Create bar chart
         try:
-            plt.figure(figsize=(10, 6))
-            bars = plt.bar(scores, counts, color=['#ff9999','#66b3ff','#99ff99','#ffcc99','#ff99cc'])
-            
-            # Add value labels on bars
-            for bar in bars:
-                height = bar.get_height()
-                plt.text(bar.get_x() + bar.get_width()/2., height,
-                        f'{int(height)}', ha='center', va='bottom')
-            
-            plt.xlabel('Rating')
-            plt.ylabel('Number of Reviews')
-            plt.title('Rating Distribution')
-            plt.xticks(scores)
-            plt.grid(axis='y', alpha=0.3)
-            
+            fig, ax = plt.subplots(figsize=(8, 4.5))
+
+            # Smooth gradient from red (1★) to green (5★)
+            gradient_colors = plt.cm.RdYlGn(np.linspace(0.05, 0.95, 5))
+            colors = list(reversed(gradient_colors))  # match ratings order (5★ first)
+
+            bars = ax.barh(
+                [f"{rating} ★" for rating in ratings],
+                counts,
+                color=colors,
+                edgecolor='white',
+                linewidth=1
+            )
+
+            ax.set_xlabel('Jumlah Review')
+            ax.set_title('Distribusi Rating')
+            ax.set_xlim(0, max(max(counts) * 1.1, 1))
+            ax.invert_yaxis()  # keep 5★ at the top
+            ax.grid(axis='x', alpha=0.2)
+            ax.set_axisbelow(True)
+
+            # Add value + percentage labels on bars
+            for bar, percentage in zip(bars, percentages):
+                width = bar.get_width()
+                label = f"{int(width)} ({percentage:.1f}%)"
+                ax.text(
+                    width + max(max(counts) * 0.01, 0.2),
+                    bar.get_y() + bar.get_height() / 2,
+                    label,
+                    va='center',
+                    ha='left',
+                    fontsize=10
+                )
+
+            plt.tight_layout()
+
             # Save to bytes
             img_buffer = BytesIO()
             plt.savefig(img_buffer, format='png', bbox_inches='tight')
-            plt.close()
-            
+            plt.close(fig)
+
             img_buffer.seek(0)
             return img_buffer.getvalue()
-            
+
         except Exception as e:
             print(f"Error generating rating chart: {e}")
             return None
@@ -192,10 +231,13 @@ class DataVisualizer:
         """
         # Get session information
         conn = sqlite3.connect(self.database_path)
+        conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
         
         cursor.execute('''
-            SELECT app_id, lang, country FROM scraping_sessions WHERE id = ?
+            SELECT app_id, lang, country, app_title, app_description, app_genre,
+                   app_genre_id, app_categories, app_version
+            FROM scraping_sessions WHERE id = ?
         ''', (session_id,))
         
         session_row = cursor.fetchone()
@@ -203,10 +245,25 @@ class DataVisualizer:
             conn.close()
             return None
         
-        app_id, lang, country = session_row
-        
+        session_info = dict(session_row)
+        app_id = session_info.get('app_id')
+        lang = session_info.get('lang')
+        country = session_info.get('country')
+
         # Get statistics
         stats = {}
+
+        stats['app_info'] = {
+            'app_id': app_id,
+            'title': session_info.get('app_title'),
+            'description': session_info.get('app_description'),
+            'genre': session_info.get('app_genre'),
+            'genre_id': session_info.get('app_genre_id'),
+            'categories': session_info.get('app_categories'),
+            'version': session_info.get('app_version'),
+            'country': country,
+            'lang': lang
+        }
         
         # Total reviews
         cursor.execute('''
@@ -330,3 +387,57 @@ class DataVisualizer:
                 'total_pages': total_pages
             }
         }
+    
+    def get_all_reviews_for_download(self, session_id: int) -> Optional[List[Dict]]:
+        """
+        Get all reviews data for CSV download
+        
+        Args:
+            session_id (int): Session ID
+            
+        Returns:
+            Optional[List[Dict]]: All reviews data or None if failed
+        """
+        conn = sqlite3.connect(self.database_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        # Get session information
+        cursor.execute('''
+            SELECT app_id, lang, country FROM scraping_sessions WHERE id = ?
+        ''', (session_id,))
+        
+        session_row = cursor.fetchone()
+        if not session_row:
+            conn.close()
+            return None
+        
+        app_id, lang, country = session_row
+        
+        # Get all reviews with processed data
+        cursor.execute('''
+            SELECT 
+                r.session_id,
+                r.app_id,
+                r.review_id, 
+                r.user_name, 
+                r.content, 
+                r.score, 
+                r.thumbs_up_count,
+                r.at,
+                p.original_content,
+                p.cleaned_content,
+                p.stemmed_content
+            FROM raw_reviews r
+            LEFT JOIN processed_reviews p ON r.review_id = p.review_id
+            WHERE r.session_id = ?
+            ORDER BY r.at DESC
+        ''', (session_id,))
+        
+        rows = cursor.fetchall()
+        conn.close()
+        
+        # Convert to list of dictionaries
+        reviews = [dict(row) for row in rows]
+        
+        return reviews

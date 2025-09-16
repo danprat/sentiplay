@@ -223,19 +223,89 @@ async function loadStatistics(sessionId) {
         }
         
         const stats = await response.json();
-        
+
         // Update UI with statistics
-        document.getElementById('total-reviews').textContent = stats.total_reviews;
-        document.getElementById('average-rating').textContent = stats.average_rating;
-        
+        const totalReviewsEl = document.getElementById('total-reviews');
+        if (totalReviewsEl) {
+            totalReviewsEl.textContent = typeof stats.total_reviews !== 'undefined' ? stats.total_reviews : '-';
+        }
+
+        const averageRatingEl = document.getElementById('average-rating');
+        if (averageRatingEl) {
+            averageRatingEl.textContent = typeof stats.average_rating !== 'undefined' ? stats.average_rating : '-';
+        }
+
         // Update most common words
         const wordsContainer = document.getElementById('most-common-words');
-        wordsContainer.innerHTML = '';
-        for (const [word, count] of Object.entries(stats.most_common_words)) {
-            const wordTag = document.createElement('span');
-            wordTag.className = 'word-tag';
-            wordTag.textContent = `${word} (${count})`;
-            wordsContainer.appendChild(wordTag);
+        if (wordsContainer) {
+            wordsContainer.innerHTML = '';
+            const wordStats = stats.most_common_words || {};
+            const entries = Object.entries(wordStats);
+            if (entries.length === 0) {
+                const emptyState = document.createElement('span');
+                emptyState.className = 'word-tag empty';
+                emptyState.textContent = 'Tidak ada kata populer';
+                wordsContainer.appendChild(emptyState);
+            } else {
+                for (const [word, count] of entries) {
+                    const wordTag = document.createElement('span');
+                    wordTag.className = 'word-tag';
+                    wordTag.textContent = `${word} (${count})`;
+                    wordsContainer.appendChild(wordTag);
+                }
+            }
+        }
+
+        // Update app information card
+        const appInfoSection = document.getElementById('app-info-section');
+        if (appInfoSection) {
+            const appInfo = stats.app_info || {};
+            if (appInfo && (appInfo.title || appInfo.app_id)) {
+                appInfoSection.style.display = 'block';
+
+                const titleEl = document.getElementById('app-info-title');
+                if (titleEl) {
+                    titleEl.textContent = appInfo.title || appInfo.app_id || '-';
+                }
+
+                const versionEl = document.getElementById('app-info-version');
+                if (versionEl) {
+                    versionEl.textContent = appInfo.version ? `Versi: ${appInfo.version}` : 'Versi tidak diketahui';
+                }
+
+                const descriptionEl = document.getElementById('app-info-description');
+                if (descriptionEl) {
+                    descriptionEl.textContent = appInfo.description || 'Tidak ada deskripsi tersedia.';
+                }
+
+                const genreEl = document.getElementById('app-info-genre');
+                if (genreEl) {
+                    genreEl.textContent = appInfo.genre || '-';
+                }
+
+                const genreIdEl = document.getElementById('app-info-genre-id');
+                if (genreIdEl) {
+                    genreIdEl.textContent = appInfo.genre_id || '-';
+                }
+
+                const categoriesEl = document.getElementById('app-info-categories');
+                if (categoriesEl) {
+                    categoriesEl.textContent = appInfo.categories || '-';
+                }
+
+                const localeEl = document.getElementById('app-info-locale');
+                if (localeEl) {
+                    const localeParts = [appInfo.lang, appInfo.country].filter(Boolean);
+                    localeEl.textContent = localeParts.length ? localeParts.join('-').toUpperCase() : '-';
+                }
+
+                const appIdEl = document.getElementById('app-info-app-id');
+                if (appIdEl) {
+                    appIdEl.textContent = appInfo.app_id || '';
+                }
+            } else {
+                appInfoSection.style.display = 'none';
+            }
         }
         
     } catch (error) {
@@ -509,8 +579,18 @@ async function startScraping(appId, count, lang, country, sort, filterScore, sub
         // Set current session ID for pagination
         currentSessionId = result.session_id;
         
+        // Wait for scraping to complete before loading results
+        await monitorScrapeProgress(result.session_id);
+        
         // Load and display results
         await loadResults(result.session_id);
+        
+        // Show download button
+        const downloadBtn = document.getElementById('download-csv-btn');
+        if (downloadBtn) {
+            downloadBtn.style.display = 'inline-block';
+            downloadBtn.onclick = () => downloadCSV(result.session_id);
+        }
         
         // Complete
         updateProgress(4, 100, 'Selesai!');
@@ -533,4 +613,25 @@ async function startScraping(appId, count, lang, country, sort, filterScore, sub
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// Download reviews as CSV
+function downloadCSV(sessionId) {
+    try {
+        // Create download link
+        const link = document.createElement('a');
+        link.href = `/api/download/reviews/${sessionId}`;
+        link.download = `reviews_${sessionId}.csv`;
+        
+        // Trigger download
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        showAlert('Download CSV dimulai...', 'success');
+        
+    } catch (error) {
+        console.error('Download error:', error);
+        showAlert('Gagal mendownload CSV: ' + error.message, 'error');
+    }
 }

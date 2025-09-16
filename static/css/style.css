@@ -656,6 +656,70 @@ tr:hover {
   border: 1px solid hsl(var(--border));
 }
 
+.word-tag.empty {
+  background-color: transparent;
+  color: hsl(var(--muted-foreground));
+  border-style: dashed;
+}
+
+.app-info-card {
+  border-radius: calc(var(--radius) - 2px);
+}
+
+.app-info-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.app-info-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.app-version-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  background-color: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.app-info-description {
+  margin: 0 0 1rem;
+  color: hsl(var(--muted-foreground));
+  font-size: 0.9rem;
+  line-height: 1.6;
+  max-height: 6.5em;
+  overflow: hidden;
+}
+
+.app-info-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.app-info-meta span {
+  display: block;
+  font-size: 0.85rem;
+}
+
+.meta-label {
+  color: hsl(var(--muted-foreground));
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.7rem !important;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .container {

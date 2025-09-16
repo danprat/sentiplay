@@ -1,10 +1,11 @@
-from flask import Flask, render_template, request, jsonify, send_file
+from flask import Flask, render_template, request, jsonify, send_file, Response
 import os
 import sqlite3
 from dotenv import load_dotenv
 import json
 import threading
-from io import BytesIO
+import csv
+from io import BytesIO, StringIO
 from scraper import PlayStoreScraper
 from preprocessing import TextPreprocessor
 from visualization import DataVisualizer
@@ -27,6 +28,14 @@ def scrape_reviews_background(session_id, app_id, lang, country, filter_score, c
     try:
         # Update session status to scraping
         db_manager.update_session_status(session_id, 'scraping')
+
+        # Try to fetch metadata for the application and persist it for later display
+        try:
+            app_details = scraper.get_app_details(app_id=app_id, lang=lang, country=country)
+            if app_details:
+                db_manager.update_session_app_info(session_id, app_details)
+        except Exception as metadata_error:
+            print(f"Failed to store app metadata for session {session_id}: {metadata_error}")
         
         # Convert sort string to Sort enum
         from google_play_scraper import Sort
@@ -46,19 +55,30 @@ def scrape_reviews_background(session_id, app_id, lang, country, filter_score, c
         saved_count = db_manager.save_reviews(reviews, session_id, app_id, lang, country)
         print(f"Saved {saved_count} reviews for session {session_id}")
         
+        if saved_count == 0:
+            print(f"No reviews saved for session {session_id}")
+            db_manager.update_session_status(session_id, 'failed')
+            return
+        
         # Update session status to processing
         db_manager.update_session_status(session_id, 'processing')
         
         # Preprocess reviews
         processed_count = preprocessor.preprocess_all_reviews(session_id)
+        print(f"Processed {processed_count} out of {saved_count} reviews for session {session_id}")
         
-        # Update session status to completed
-        db_manager.update_session_status(session_id, 'completed')
-        
-        print(f"Scraping completed for session {session_id}. Processed {processed_count} reviews.")
+        # Always update to completed if we have any data, even if processing failed partially
+        if saved_count > 0:
+            db_manager.update_session_status(session_id, 'completed')
+            print(f"Scraping completed for session {session_id}. Saved {saved_count} reviews, processed {processed_count} reviews.")
+        else:
+            print(f"No reviews saved for session {session_id}")
+            db_manager.update_session_status(session_id, 'failed')
         
     except Exception as e:
         print(f"Error in scraping background task for session {session_id}: {e}")
+        import traceback
+        traceback.print_exc()
         db_manager.update_session_status(session_id, 'failed')
 
 # Routes
@@ -81,12 +101,22 @@ def scrape_reviews():
         filter_score = data.get('filter_score')
         count = data.get('count', 100)
         sort = data.get('sort', 'NEWEST')
+        force_new = data.get('force_new', False)  # Option to force new scraping
         
         # Validate required parameters
         if not app_id:
             return jsonify({"error": "App ID is required"}), 400
         
-        # Create scraping session
+        # Disable caching - always scrape fresh data
+        # This ensures Analysis Results are always up-to-date and don't use old cached data
+        print(f"Starting fresh scraping for app_id: {app_id}, filter_score: {filter_score}")
+        
+        # Clean up old data to prevent database from growing too large
+        cleanup_count = db_manager.cleanup_old_data(keep_days=3, keep_sessions=5)
+        if cleanup_count > 0:
+            print(f"Cleaned up {cleanup_count} old sessions")
+        
+        # Create new scraping session
         session_id = db_manager.create_scraping_session(
             app_id=app_id,
             lang=lang,
@@ -105,7 +135,8 @@ def scrape_reviews():
         return jsonify({
             "session_id": session_id,
             "status": "started",
-            "message": "Scraping started successfully"
+            "message": "Scraping started successfully",
+            "cached": False
         })
         
     except Exception as e:
@@ -122,11 +153,13 @@ def scrape_status(session_id):
             
         # Get review count
         review_count = db_manager.get_reviews_count(session_id)
+        processed_count = db_manager.get_processed_reviews_count(session_id)
         
         return jsonify({
             "session_id": session_id,
             "status": session_data["status"],
             "review_count": review_count,
+            "processed_count": processed_count,
             "app_id": session_data["app_id"],
             "lang": session_data["lang"],
             "country": session_data["country"]
@@ -211,6 +244,63 @@ def reviews_data(session_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/api/download/reviews/<int:session_id>')
+def download_reviews_csv(session_id):
+    """API endpoint to download reviews as CSV"""
+    try:
+        # Get all reviews for the session (no pagination)
+        reviews_data = visualizer.get_all_reviews_for_download(session_id)
+        
+        if not reviews_data:
+            return jsonify({"error": "No reviews found for this session"}), 404
+        
+        # Create CSV in memory
+        output = StringIO()
+        writer = csv.writer(output)
+        
+        # Write CSV header
+        writer.writerow([
+            'Session ID', 'App ID', 'Review ID', 'User Name', 'Rating', 
+            'Date', 'Content', 'Original Content', 'Cleaned Content', 
+            'Processed Content', 'Thumbs Up'
+        ])
+        
+        # Write reviews data
+        for review in reviews_data:
+            writer.writerow([
+                review.get('session_id', ''),
+                review.get('app_id', ''),
+                review.get('review_id', ''),
+                review.get('user_name', ''),
+                review.get('score', ''),
+                review.get('at', ''),
+                review.get('content', ''),
+                review.get('original_content', ''),
+                review.get('cleaned_content', ''),
+                review.get('stemmed_content', ''),
+                review.get('thumbs_up_count', '')
+            ])
+        
+        # Prepare response
+        output.seek(0)
+        
+        # Get session info for filename
+        session_info = db_manager.get_session_status(session_id)
+        app_id = session_info.get('app_id', 'unknown') if session_info else 'unknown'
+        filename = f"reviews_{app_id}_{session_id}.csv"
+        
+        return Response(
+            output.getvalue(),
+            mimetype='text/csv',
+            headers={
+                'Content-Disposition': f'attachment; filename={filename}',
+                'Content-Type': 'text/csv; charset=utf-8'
+            }
+        )
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 if __name__ == '__main__':
     import os
     import sys
@@ -234,5 +324,5 @@ if __name__ == '__main__':
         debug = False
         host = '0.0.0.0'
     
-    print(f"Starting SentiPlay server on {host}:{port} (debug={debug})")
+    print(f"Starting Sentiplay - Analisis Sentimen Akademik server on {host}:{port} (debug={debug})")
     app.run(host=host, port=port, debug=debug)
