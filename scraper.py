@@ -66,7 +66,14 @@ class PlayStoreScraper:
 
         categories = metadata.get('categories') or metadata.get('category') or metadata.get('genre')
         if isinstance(categories, (list, tuple)):
-            categories = ', '.join([str(cat) for cat in categories if cat])
+            category_names = []
+            for cat in categories:
+                if cat:
+                    if isinstance(cat, dict) and 'name' in cat:
+                        category_names.append(cat['name'])
+                    else:
+                        category_names.append(str(cat))
+            categories = ', '.join(category_names)
 
         return {
             'title': metadata.get('title'),

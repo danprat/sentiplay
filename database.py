@@ -184,7 +184,14 @@ class DatabaseManager:
 
         categories = app_info.get('categories')
         if isinstance(categories, (list, tuple)):
-            categories = ', '.join([str(category) for category in categories if category])
+            category_names = []
+            for category in categories:
+                if category:
+                    if isinstance(category, dict) and 'name' in category:
+                        category_names.append(category['name'])
+                    else:
+                        category_names.append(str(category))
+            categories = ', '.join(category_names)
 
         conn = sqlite3.connect(self.database_path)
         cursor = conn.cursor()
