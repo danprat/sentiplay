@@ -182,17 +182,6 @@ class DatabaseManager:
         if not app_info:
             return
 
-        categories = app_info.get('categories')
-        if isinstance(categories, (list, tuple)):
-            category_names = []
-            for category in categories:
-                if category:
-                    if isinstance(category, dict) and 'name' in category:
-                        category_names.append(category['name'])
-                    else:
-                        category_names.append(str(category))
-            categories = ', '.join(category_names)
-
         conn = sqlite3.connect(self.database_path)
         cursor = conn.cursor()
 
@@ -201,7 +190,6 @@ class DatabaseManager:
             'app_description': app_info.get('description'),
             'app_genre': app_info.get('genre'),
             'app_genre_id': app_info.get('genre_id'),
-            'app_categories': categories,
             'app_version': app_info.get('version')
         }
 

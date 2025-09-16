@@ -305,11 +305,6 @@ async function loadStatistics(sessionId) {
                     genreIdEl.textContent = appInfo.genre_id || '-';
                 }
 
-                const categoriesEl = document.getElementById('app-info-categories');
-                if (categoriesEl) {
-                    categoriesEl.textContent = appInfo.categories || '-';
-                }
-
                 const localeEl = document.getElementById('app-info-locale');
                 if (localeEl) {
                     const localeParts = [appInfo.lang, appInfo.country].filter(Boolean);
