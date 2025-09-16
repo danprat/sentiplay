@@ -7,12 +7,15 @@ SentiPlay adalah aplikasi web untuk menganalisis sentimen review aplikasi dari G
 ## ✨ Fitur Utama
 
 - 📱 **Scraping Review Google Play Store** - Ambil review aplikasi dengan berbagai filter
-- 🔍 **Filter Rating** - Filter review berdasarkan rating (1-5 bintang)
+- 🔍 **Filter Rating** - Filter review berdasarkan rating (1-5 bintang) 
 - 📊 **Visualisasi Data** - Wordcloud dan chart distribusi rating
+- 📥 **Export CSV** - Download hasil review dalam format CSV
 - 🧹 **Text Preprocessing** - Pembersihan teks dengan Sastrawi (Indonesian NLP)
 - 📈 **Statistik Lengkap** - Total review, rating rata-rata, kata yang sering muncul
 - 🔄 **Real-time Processing** - Proses scraping dan analisis secara background
 - 💾 **Database Storage** - Penyimpanan data review dan hasil preprocessing
+- 🗑️ **Auto Cleanup** - Pembersihan otomatis data lama (>7 hari) untuk menghemat storage
+- ⚡ **No Caching** - Data selalu fresh tanpa cache untuk hasil analisis yang akurat
 
 ## 🛠️ Teknologi yang Digunakan
 
@@ -182,10 +185,26 @@ Setelah scraping selesai, Anda akan melihat:
 
 #### Visualisasi
 - **Word Cloud**: Kata-kata yang sering muncul dalam review
-- **Rating Chart**: Grafik batang distribusi rating
+- **Rating Chart**: Grafik batang distribusi rating  
 - **Reviews Table**: Tabel review dengan pagination
+- **CSV Export**: Download semua review data dalam format CSV untuk analisis lanjutan
 
-### 3. Filter dan Analisis Lanjutan
+### 3. Export Data ke CSV
+
+Setelah scraping selesai, Anda dapat mengunduh data review dalam format CSV:
+
+1. **Klik tombol "📥 Download CSV"** di bagian Analysis Results
+2. File CSV akan berisi kolom:
+   - `user_name`: Nama pengguna
+   - `score`: Rating (1-5)  
+   - `at`: Tanggal review
+   - `content`: Isi review lengkap
+   - `original_content`: Teks asli sebelum preprocessing
+   - `cleaned_content`: Teks setelah pembersihan
+   - `stemmed_content`: Teks setelah stemming
+3. **Format nama file**: `reviews_[app_id]_[session_id]_[timestamp].csv`
+
+### 4. Filter dan Analisis Lanjutan
 
 #### Filter berdasarkan Rating
 ```json
@@ -204,6 +223,28 @@ Setelah scraping selesai, Anda akan melihat:
   "country": "us",      // Dari pengguna AS
   "count": 200
 }
+```
+
+### 5. Sistem Auto Cleanup
+
+Aplikasi secara otomatis menghapus data lama untuk menghemat space:
+
+- **Pembersihan Otomatis**: Data session > 7 hari akan dihapus otomatis
+- **Trigger**: Pembersihan terjadi setiap kali scraping baru dimulai
+- **Data yang Dihapus**:
+  - Raw reviews dari session lama
+  - Processed reviews terkait
+  - Scraping sessions metadata
+- **Log**: Informasi pembersihan akan ditampilkan di console
+
+```bash
+# Manual cleanup (jika diperlukan)
+python -c "
+from database import DatabaseManager
+db = DatabaseManager()
+deleted = db.cleanup_old_sessions()
+print(f'Deleted {deleted} old sessions')
+"
 ```
 
 ## 🔧 Konfigurasi
@@ -269,6 +310,9 @@ GET /api/statistics/{session_id}
 
 # Get reviews data
 GET /api/reviews/{session_id}?page=1&limit=20
+
+# Download CSV file
+GET /api/download/{session_id}/csv
 
 # Get wordcloud image
 GET /api/wordcloud/{session_id}
@@ -444,6 +488,24 @@ sqlite3.OperationalError: database is locked
 ```
 **Solusi**: Restart aplikasi atau check file lock
 
+#### 4. CSV Download Gagal
+```bash
+Error 500: Failed to generate CSV
+```
+**Solusi**: 
+- Pastikan session_id valid dan scraping sudah completed
+- Check permission write di direktori aplikasi
+- Restart aplikasi jika persistent
+
+#### 5. Analysis Results Tidak Update
+```bash
+Total Reviews: 1000, Average Rating: 1.0 (stuck)
+```
+**Solusi**:
+- Pastikan tidak menggunakan data cached
+- Lakukan scraping baru dengan parameter berbeda  
+- Check session status di database: `SELECT status FROM scraping_sessions WHERE id = [session_id]`
+
 ### Debug Mode
 ```bash
 # Enable debug logging
@@ -480,7 +542,15 @@ pytest
 
 ## 📝 Changelog
 
-### v1.2.0 (Current)
+### v1.3.0 (Current)
+- ✅ **NEW**: Added CSV export functionality for reviews data
+- ✅ **NEW**: Implemented automatic cleanup system for old data (>7 days)
+- ✅ **IMPROVED**: Disabled caching to prevent stale Analysis Results
+- ✅ **FIX**: Fixed session status updates for proper completion tracking
+- ✅ **IMPROVED**: Enhanced data management to prevent database bloat
+- ✅ **UX**: Added download progress indicator and better error handling
+
+### v1.2.0
 - ✅ Fixed rating filter functionality
 - ✅ Improved session-based data isolation
 - ✅ Added matplotlib Agg backend for web compatibility
