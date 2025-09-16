@@ -97,6 +97,54 @@ SentiPlay adalah aplikasi web untuk menganalisis sentimen review aplikasi dari G
 3. **Akses Aplikasi**
    Buka browser dan akses: `http://localhost:5000`
 
+### Metode 3: Menggunakan Docker Portainer 📦
+
+#### Prerequisites
+- Docker Engine
+- Portainer Web UI
+
+#### Quick Deploy dengan Portainer Stack
+
+1. **Login ke Portainer**
+   - Buka Portainer Web UI (biasanya `http://localhost:9000`)
+
+2. **Create New Stack**
+   - Pilih **Stacks** → **Add Stack**
+   - Nama: `sentiplay`
+
+3. **Copy Stack Configuration**
+   ```yaml
+   version: '3.8'
+   services:
+     sentiplay:
+       image: python:3.9-slim
+       container_name: sentiplay
+       restart: unless-stopped
+       ports:
+         - "5000:5000"
+       volumes:
+         - sentiplay_data:/app/data
+       environment:
+         - FLASK_ENV=production
+         - TZ=Asia/Jakarta
+       command: |
+         bash -c "
+           apt-get update && apt-get install -y git gcc g++ curl
+           git clone https://github.com/danprat/sentiplay.git /app
+           cd /app && pip install -r requirements.txt
+           python migrate_database.py
+           python app.py --host=0.0.0.0 --port=5000
+         "
+   volumes:
+     sentiplay_data:
+   ```
+
+4. **Deploy & Access**
+   - Klik **Deploy the stack**
+   - Akses: `http://localhost:5000`
+
+📋 **Panduan lengkap**: [PORTAINER-DEPLOY.md](PORTAINER-DEPLOY.md)
+
 #### Dockerfile
 
 ```dockerfile
