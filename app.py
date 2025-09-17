@@ -18,23 +18,15 @@ load_dotenv()
 # Create Flask app
 app = Flask(__name__)
 
-# Configure CORS
+# Configure CORS - Use Flask-CORS for automatic handling
 CORS(app, resources={
-    r"/api/*": {
-        "origins": ["*"],  # Allow all origins
+    r"/*": {  # Apply to all routes
+        "origins": "*",  # Allow all origins
         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization", "Access-Control-Allow-Credentials"],
-        "supports_credentials": True
+        "allow_headers": ["Content-Type", "Authorization"],
+        "supports_credentials": False  # Set to False to avoid conflicts
     }
 })
-
-# Add CORS headers to all responses
-@app.after_request
-def after_request(response):
-    response.headers.add('Access-Control-Allow-Origin', '*')
-    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
-    return response
 
 # Initialize components
 db_manager = DatabaseManager()
@@ -106,20 +98,15 @@ def index():
     """Render the main page"""
     return render_template('index.html')
 
+@app.route('/cors-test.html')
+def cors_test():
+    """Serve CORS test page"""
+    return send_file('cors-test.html')
+
 @app.route('/health')
 def health():
     """Health check endpoint for Docker/Kubernetes"""
     return jsonify({"status": "healthy", "service": "sentiplay"}), 200
-
-@app.before_request
-def handle_preflight():
-    """Handle CORS preflight requests"""
-    if request.method == "OPTIONS":
-        response = Response()
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-        response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
-        return response
 
 @app.route('/api/scrape', methods=['POST'])
 def scrape_reviews():
@@ -342,7 +329,7 @@ if __name__ == '__main__':
     # Parse command line arguments for Docker
     host = '127.0.0.1'
     port = 5000
-    debug = True
+    debug = False  # Turn off debug mode to prevent auto-restart
     
     if len(sys.argv) > 1:
         for arg in sys.argv[1:]:
