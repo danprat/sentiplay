@@ -20,7 +20,8 @@ SentiPlay adalah aplikasi web untuk menganalisis sentimen review aplikasi dari G
 ## 🛠️ Teknologi yang Digunakan
 
 ### Backend
-- **Flask** - Web framework Python
+- **FastAPI** - Web framework Python
+- **Uvicorn** - ASGI server
 - **SQLite** - Database penyimpanan
 - **google-play-scraper** - Library untuk scraping Google Play Store
 - **Sastrawi** - Indonesian text processing
@@ -69,7 +70,11 @@ SentiPlay adalah aplikasi web untuk menganalisis sentimen review aplikasi dari G
 
 5. **Jalankan Aplikasi**
    ```bash
+   # Menjalankan via entry point bawaan
    python app.py
+
+   # Atau langsung dengan uvicorn
+   uvicorn app:app --host 0.0.0.0 --port 5000
    ```
 
 6. **Akses Aplikasi**
@@ -125,7 +130,7 @@ SentiPlay adalah aplikasi web untuk menganalisis sentimen review aplikasi dari G
        volumes:
          - sentiplay_data:/app/data
        environment:
-         - FLASK_ENV=production
+         - FASTAPI_ENV=production
          - TZ=Asia/Jakarta
        command: |
          bash -c "
@@ -191,7 +196,7 @@ services:
     volumes:
       - ./data:/app/data
     environment:
-      - FLASK_ENV=production
+      - FASTAPI_ENV=production
     restart: unless-stopped
 
   # Optional: Add nginx for production
@@ -302,9 +307,10 @@ print(f'Deleted {deleted} old sessions')
 Buat file `.env` di root directory:
 
 ```env
-# Flask Configuration
-FLASK_ENV=development
-FLASK_DEBUG=True
+# FastAPI Configuration
+FASTAPI_ENV=development
+# (opsional) variabel lama masih didukung untuk kompatibilitas
+# FLASK_ENV=development
 
 # Database Configuration
 DATABASE_PATH=data/reviews.db
@@ -360,7 +366,7 @@ GET /api/statistics/{session_id}
 GET /api/reviews/{session_id}?page=1&limit=20
 
 # Download CSV file
-GET /api/download/{session_id}/csv
+GET /api/download/reviews/{session_id}
 
 # Get wordcloud image
 GET /api/wordcloud/{session_id}
@@ -614,7 +620,7 @@ pytest
 ### v1.0.0
 - ✅ Basic Google Play Store scraping
 - ✅ SQLite database integration
-- ✅ Web interface with Flask
+- ✅ Web interface with FastAPI
 - ✅ Basic statistics and review display
 
 ## 📄 License
@@ -629,7 +635,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - **google-play-scraper** - For providing the scraping functionality
 - **Sastrawi** - For Indonesian text processing
-- **Flask** - For the web framework
+- **FastAPI** - For the web framework
 - **matplotlib** & **wordcloud** - For data visualization
 
 ## 📞 Support

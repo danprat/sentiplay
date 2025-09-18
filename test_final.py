@@ -111,5 +111,5 @@ if __name__ == "__main__":
             print("❌ Server not responding correctly")
     except Exception as e:
         print(f"❌ Server not accessible: {e}")
-        print("\nMake sure Flask server is running:")
-        print("python app.py")
+        print("\nMake sure FastAPI server is running:")
+        print("uvicorn app:app --host 0.0.0.0 --port 5000")

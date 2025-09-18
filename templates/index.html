@@ -1,84 +1,170 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sentiplay - Analisis Sentimen Akademik</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        border: "hsl(214.3 31.8% 91.4%)",
+                        input: "hsl(214.3 31.8% 91.4%)",
+                        ring: "hsl(221.2 83.2% 53.3%)",
+                        background: "hsl(0 0% 100%)",
+                        foreground: "hsl(222.2 84% 4.9%)",
+                        primary: {
+                            DEFAULT: "hsl(221.2 83.2% 53.3%)",
+                            foreground: "hsl(210 40% 98%)",
+                        },
+                        secondary: {
+                            DEFAULT: "hsl(210 40% 96%)",
+                            foreground: "hsl(222.2 84% 4.9%)",
+                        },
+                        destructive: {
+                            DEFAULT: "hsl(0 84.2% 60.2%)",
+                            foreground: "hsl(210 40% 98%)",
+                        },
+                        muted: {
+                            DEFAULT: "hsl(210 40% 96%)",
+                            foreground: "hsl(215.4 16.3% 46.9%)",
+                        },
+                        accent: {
+                            DEFAULT: "hsl(210 40% 96%)",
+                            foreground: "hsl(222.2 84% 4.9%)",
+                        },
+                        card: {
+                            DEFAULT: "hsl(0 0% 100%)",
+                            foreground: "hsl(222.2 84% 4.9%)",
+                        },
+                    },
+                    borderRadius: {
+                        lg: "0.5rem",
+                        md: "calc(0.5rem - 2px)",
+                        sm: "calc(0.5rem - 4px)",
+                    },
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="/static/css/style.css">
 </head>
-<body>
-    <header>
-        <div class="container">
-            <div class="header-content">
-                <div class="logo">
-                    <span class="logo-icon">📊</span>
-                    <h1>Sentiplay - Analisis Sentimen Akademik</h1>
+<body class="bg-background font-sans antialiased">
+    <!-- Modern Header with shadcn/ui styling -->
+    <header class="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex h-16 items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-foreground">Sentiplay</h1>
+                        <p class="text-sm text-muted-foreground">Analisis Sentimen Akademik</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button class="inline-flex items-center gap-2 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        API Docs
+                    </button>
                 </div>
             </div>
         </div>
     </header>
 
-    <div class="container">
+    <main class="container mx-auto px-4 py-8">
         <!-- Alert Container -->
-        <div id="alert-container" class="alert hidden"></div>
-
-        <!-- Progress Container -->
-        <div id="progress-container" class="progress-container" style="display: none;">
-            <div class="progress-card">
-                <h3>🔄 Sedang Memproses...</h3>
-                <div class="progress-steps">
-                    <div class="step" id="step-1">
-                        <div class="step-icon">1</div>
-                        <div class="step-text">Memulai scraping reviews...</div>
-                        <div class="step-status">⏳</div>
-                    </div>
-                    <div class="step" id="step-2">
-                        <div class="step-icon">2</div>
-                        <div class="step-text">Mengambil data dari Google Play...</div>
-                        <div class="step-status">⏳</div>
-                    </div>
-                    <div class="step" id="step-3">
-                        <div class="step-icon">3</div>
-                        <div class="step-text">Menyimpan dan memproses data...</div>
-                        <div class="step-status">⏳</div>
-                    </div>
-                    <div class="step" id="step-4">
-                        <div class="step-icon">4</div>
-                        <div class="step-text">Membuat visualisasi...</div>
-                        <div class="step-status">⏳</div>
-                    </div>
-                </div>
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progress-fill"></div>
-                </div>
-                <div class="progress-text">
-                    <span id="progress-percentage">0%</span> - 
-                    <span id="progress-message">Memulai proses...</span>
+        <div id="alert-container" class="hidden mb-6">
+            <div class="rounded-lg border border-border bg-card text-card-foreground shadow-sm p-4">
+                <div class="flex items-center gap-2">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span id="alert-message" class="text-sm font-medium"></span>
                 </div>
             </div>
         </div>
 
-        <!-- Scrape Form -->
-        <section class="form-section card">
-            <div class="card-header">
-                <h2 class="card-title">Analisis Sentimen Google Play Reviews</h2>
-                <p class="card-description">Platform analisis sentimen akademik untuk review aplikasi Android dari Google Play Store</p>
+        <!-- Progress Container -->
+        <div id="progress-container" class="hidden mb-6">
+            <div class="rounded-lg border border-border bg-card text-card-foreground shadow-sm p-6">
+                <div class="space-y-6">
+                    <div class="flex items-center gap-3">
+                        <div class="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                            <svg class="h-4 w-4 text-primary animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold">Sedang Memproses...</h3>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div class="step flex items-center gap-3 p-3 rounded-lg border border-border" id="step-1">
+                            <div class="step-icon h-6 w-6 rounded-full bg-muted flex items-center justify-center text-xs font-medium">1</div>
+                            <div class="step-text flex-1 text-sm">Memulai scraping reviews...</div>
+                            <div class="step-status text-sm text-muted-foreground">⏳</div>
+                        </div>
+                        <div class="step flex items-center gap-3 p-3 rounded-lg border border-border" id="step-2">
+                            <div class="step-icon h-6 w-6 rounded-full bg-muted flex items-center justify-center text-xs font-medium">2</div>
+                            <div class="step-text flex-1 text-sm">Mengambil data dari Google Play...</div>
+                            <div class="step-status text-sm text-muted-foreground">⏳</div>
+                        </div>
+                        <div class="step flex items-center gap-3 p-3 rounded-lg border border-border" id="step-3">
+                            <div class="step-icon h-6 w-6 rounded-full bg-muted flex items-center justify-center text-xs font-medium">3</div>
+                            <div class="step-text flex-1 text-sm">Menyimpan dan memproses data...</div>
+                            <div class="step-status text-sm text-muted-foreground">⏳</div>
+                        </div>
+                        <div class="step flex items-center gap-3 p-3 rounded-lg border border-border" id="step-4">
+                            <div class="step-icon h-6 w-6 rounded-full bg-muted flex items-center justify-center text-xs font-medium">4</div>
+                            <div class="step-text flex-1 text-sm">Membuat visualisasi...</div>
+                            <div class="step-status text-sm text-muted-foreground">⏳</div>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-2">
+                        <div class="w-full bg-secondary rounded-full h-2">
+                            <div class="bg-primary h-2 rounded-full transition-all duration-500" id="progress-fill" style="width: 0%"></div>
+                        </div>
+                        <div class="flex justify-between text-sm text-muted-foreground">
+                            <span id="progress-percentage">0%</span>
+                            <span id="progress-message">Memulai proses...</span>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="card-content">
-                <form id="scrape-form" class="space-y-4">
-                    <div class="row">
-                        <div class="col">
-                            <div class="form-group">
-                                <label for="app_id" class="form-label">App ID</label>
-                                <input type="text" id="app_id" name="app_id" class="form-control" 
+        </div>
+
+        <!-- Modern Form Section -->
+        <section class="container mx-auto px-4 py-8">
+            <div class="rounded-lg border border-border bg-card text-card-foreground shadow-sm">
+                <div class="p-6 pb-4">
+                    <div class="space-y-2">
+                        <h2 class="text-2xl font-bold tracking-tight">Analisis Sentimen Google Play Reviews</h2>
+                        <p class="text-muted-foreground">Platform analisis sentimen akademik untuk review aplikasi Android dari Google Play Store</p>
+                    </div>
+                </div>
+                <div class="p-6 pt-0">
+                    <form id="scrape-form" class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="space-y-2">
+                                <label for="app_id" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">App ID</label>
+                                <input type="text" id="app_id" name="app_id" 
+                                       class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" 
                                        placeholder="com.example.app" required>
                             </div>
-                        </div>
-                        <div class="col">
-                            <div class="form-group">
-                                <label for="lang" class="form-label">Language</label>
-                                <select id="lang" name="lang" class="form-control">
+                            <div class="space-y-2">
+                                <label for="lang" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Language</label>
+                                <select id="lang" name="lang" 
+                                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
                                     <option value="id">Indonesian (id)</option>
                                     <option value="en">English (en)</option>
                                     <option value="es">Spanish (es)</option>
@@ -86,11 +172,10 @@
                                     <option value="de">German (de)</option>
                                 </select>
                             </div>
-                        </div>
-                        <div class="col">
-                            <div class="form-group">
-                                <label for="country" class="form-label">Country</label>
-                                <select id="country" name="country" class="form-control">
+                            <div class="space-y-2">
+                                <label for="country" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Country</label>
+                                <select id="country" name="country" 
+                                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
                                     <option value="id">Indonesia (id)</option>
                                     <option value="us">United States (us)</option>
                                     <option value="gb">United Kingdom (gb)</option>
@@ -99,153 +184,234 @@
                                 </select>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="row">
-                        <div class="col">
-                            <div class="form-group">
-                                <label for="count" class="form-label">Number of Reviews</label>
-                                <input type="number" id="count" name="count" class="form-control" 
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="space-y-2">
+                                <label for="count" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Number of Reviews</label>
+                                <input type="number" id="count" name="count" 
+                                       class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" 
                                        value="100" min="1" max="1000">
                             </div>
-                        </div>
-                        <div class="col">
-                            <div class="form-group">
-                                <label for="sort" class="form-label">Sort Reviews</label>
-                                <select id="sort" name="sort" class="form-control">
+                            <div class="space-y-2">
+                                <label for="sort" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Sort Reviews</label>
+                                <select id="sort" name="sort" 
+                                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
                                     <option value="NEWEST">Newest</option>
                                     <option value="MOST_RELEVANT">Most Relevant</option>
                                 </select>
                             </div>
                         </div>
-                        <div class="col">
-                            <div class="form-group">
-                                <label class="form-label">Filter by Rating</label>
-                                <div class="rating-filters">
-                                    <div class="rating-btn" data-rating="1">1 ★</div>
-                                    <div class="rating-btn" data-rating="2">2 ★</div>
-                                    <div class="rating-btn" data-rating="3">3 ★</div>
-                                    <div class="rating-btn" data-rating="4">4 ★</div>
-                                    <div class="rating-btn" data-rating="5">5 ★</div>
-                                </div>
-                                <small style="color: hsl(var(--muted-foreground)); font-size: 0.75rem; margin-top: 0.5rem; display: block;">
-                                    Klik untuk memilih rating tertentu, atau biarkan kosong untuk semua rating
-                                </small>
-                            </div>
-                        </div>
-                    </div>
 
-                    <button type="submit" class="btn btn-primary">
-                        <span>🚀 Scrape Reviews</span>
-                    </button>
-                </form>
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Filter by Rating</label>
+                            <div class="flex gap-2 flex-wrap">
+                                <button type="button" class="rating-btn inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2" data-rating="1">1 ⭐</button>
+                                <button type="button" class="rating-btn inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2" data-rating="2">2 ⭐</button>
+                                <button type="button" class="rating-btn inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2" data-rating="3">3 ⭐</button>
+                                <button type="button" class="rating-btn inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2" data-rating="4">4 ⭐</button>
+                                <button type="button" class="rating-btn inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2" data-rating="5">5 ⭐</button>
+                            </div>
+                            <p class="text-xs text-muted-foreground">Klik untuk memilih rating tertentu, atau biarkan kosong untuk semua rating</p>
+                        </div>
+
+                        <button type="submit" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-11 px-8 gap-2 w-full md:w-auto">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            </svg>
+                            Scrape Reviews
+                        </button>
+                    </form>
+                </div>
             </div>
         </section>
 
         <!-- Results Section -->
-        <section id="results-section" class="results-section space-y-6">
-            <h2 class="section-title">📊 Analysis Results</h2>
+        <section id="results-section" class="space-y-6">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <svg class="h-5 w-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    </svg>
+                </div>
+                <h2 class="text-2xl font-bold tracking-tight">Analysis Results</h2>
+            </div>
 
             <!-- App Information -->
-            <div id="app-info-section" class="app-info-card card" style="display: none;">
-                <div class="card-header">
-                    <h3 class="card-title">ℹ️ Informasi Aplikasi</h3>
-                    <p class="card-description" id="app-info-app-id"></p>
-                </div>
-                <div class="card-content">
-                    <div class="app-info-header">
-                        <h4 id="app-info-title" class="app-info-title">-</h4>
-                        <span id="app-info-version" class="app-version-badge">Versi tidak diketahui</span>
+            <div id="app-info-section" class="rounded-lg border border-border bg-card text-card-foreground shadow-sm" style="display: none;">
+                <div class="p-6 pb-4">
+                    <div class="flex items-center gap-2 mb-2">
+                        <svg class="h-5 w-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <h3 class="text-lg font-semibold">Informasi Aplikasi</h3>
                     </div>
-                    <p id="app-info-description" class="app-info-description">Tidak ada deskripsi tersedia.</p>
-                    <div class="app-info-meta">
-                        <div>
-                            <span class="meta-label">Genre</span>
-                            <span id="app-info-genre">-</span>
+                    <p class="text-sm text-muted-foreground" id="app-info-app-id"></p>
+                </div>
+                <div class="p-6 pt-0">
+                    <div class="space-y-4">
+                        <div class="flex items-start justify-between">
+                            <h4 id="app-info-title" class="text-xl font-semibold">-</h4>
+                            <span id="app-info-version" class="inline-flex items-center rounded-full border border-border bg-background px-2.5 py-0.5 text-xs font-medium">Versi tidak diketahui</span>
                         </div>
-                        <div>
-                            <span class="meta-label">Genre ID</span>
-                            <span id="app-info-genre-id">-</span>
-                        </div>
-                        <div>
-                            <span class="meta-label">Locale</span>
-                            <span id="app-info-locale">-</span>
+                        <p id="app-info-description" class="text-muted-foreground text-sm">Tidak ada deskripsi tersedia.</p>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-border">
+                            <div class="space-y-1">
+                                <span class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Genre</span>
+                                <span id="app-info-genre" class="block text-sm font-medium">-</span>
+                            </div>
+                            <div class="space-y-1">
+                                <span class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Genre ID</span>
+                                <span id="app-info-genre-id" class="block text-sm font-medium">-</span>
+                            </div>
+                            <div class="space-y-1">
+                                <span class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Locale</span>
+                                <span id="app-info-locale" class="block text-sm font-medium">-</span>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- Statistics -->
-            <div class="stats-container">
-                <div class="stat-card">
-                    <div class="stat-label">Total Reviews</div>
-                    <div id="total-reviews" class="stat-value">0</div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="rounded-lg border border-border bg-card text-card-foreground shadow-sm p-6">
+                    <div class="space-y-2">
+                        <p class="text-sm font-medium text-muted-foreground">Total Reviews</p>
+                        <p id="total-reviews" class="text-2xl font-bold">0</p>
+                    </div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-label">Average Rating</div>
-                    <div id="average-rating" class="stat-value">0.0</div>
+                <div class="rounded-lg border border-border bg-card text-card-foreground shadow-sm p-6">
+                    <div class="space-y-2">
+                        <p class="text-sm font-medium text-muted-foreground">Average Rating</p>
+                        <p id="average-rating" class="text-2xl font-bold">0.0</p>
+                    </div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-label">Periode Review</div>
-                    <div id="review-period" class="stat-value stat-period-value">-</div>
+                <div class="rounded-lg border border-border bg-card text-card-foreground shadow-sm p-6">
+                    <div class="space-y-2">
+                        <p class="text-sm font-medium text-muted-foreground">Periode Review</p>
+                        <p id="review-period" class="text-sm font-medium">-</p>
+                    </div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-label">Most Common Words</div>
-                    <div id="most-common-words" class="most-common-words">
-                        <!-- Words will be populated by JavaScript -->
+                <div class="rounded-lg border border-border bg-card text-card-foreground shadow-sm p-6">
+                    <div class="space-y-2">
+                        <p class="text-sm font-medium text-muted-foreground">Most Common Words</p>
+                        <div id="most-common-words" class="flex flex-wrap gap-1">
+                            <!-- Words will be populated by JavaScript -->
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- WordCloud -->
-            <div class="wordcloud-container">
-                <h3>☁️ Word Cloud</h3>
-                <img id="wordcloud-image" alt="Word Cloud" style="max-width: 100%; height: auto;">
-            </div>
+            <!-- Charts Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- WordCloud -->
+                <div class="rounded-lg border border-border bg-card text-card-foreground shadow-sm p-6">
+                    <div class="flex items-center gap-2 mb-4">
+                        <svg class="h-5 w-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                        </svg>
+                        <h3 class="text-lg font-semibold">Word Cloud</h3>
+                    </div>
+                    <div class="flex items-center justify-center bg-muted/50 rounded-lg p-4">
+                        <img id="wordcloud-image" alt="Word Cloud" class="max-w-full h-auto rounded-lg">
+                    </div>
+                </div>
 
-            <!-- Rating Chart -->
-            <div class="rating-chart-container" style="display: none;">
-                <h3>📈 Rating Distribution</h3>
-                <canvas id="rating-chart-canvas" width="400" height="300" style="width: 100%;"></canvas>
-            </div>
+                <!-- Rating Chart -->
+                <div class="rating-chart-container rounded-lg border border-border bg-card text-card-foreground shadow-sm p-6" style="display: none;">
+                    <div class="flex items-center gap-2 mb-4">
+                        <svg class="h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                        <h3 class="text-lg font-semibold">Rating Distribution</h3>
+                    </div>
+                    <canvas id="rating-chart-canvas" width="400" height="300" class="w-full"></canvas>
+                </div>
 
-            <!-- Keyword Frequency Chart -->
-            <div class="keyword-chart-container" style="display: none;">
-                <h3>🔠 Kata Paling Umum</h3>
-                <canvas id="keyword-chart-canvas" width="400" height="300" style="width: 100%;"></canvas>
+                <!-- Keyword Frequency Chart -->
+                <div class="keyword-chart-container rounded-lg border border-border bg-card text-card-foreground shadow-sm p-6 lg:col-span-2" style="display: none;">
+                    <div class="flex items-center gap-2 mb-4">
+                        <svg class="h-5 w-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path>
+                        </svg>
+                        <h3 class="text-lg font-semibold">Kata Paling Umum</h3>
+                    </div>
+                    <canvas id="keyword-chart-canvas" width="400" height="300" class="w-full"></canvas>
+                </div>
             </div>
 
             <!-- Reviews Table -->
-            <div class="reviews-table-container">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                    <h3>💬 Reviews</h3>
-                    <button id="download-csv-btn" class="btn btn-secondary" style="display: none;">
-                        📥 Download CSV
-                    </button>
+            <div class="rounded-lg border border-border bg-card text-card-foreground shadow-sm">
+                <div class="p-6 pb-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <svg class="h-5 w-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                            </svg>
+                            <h3 class="text-lg font-semibold">Reviews</h3>
+                        </div>
+                        <button id="download-csv-btn" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 gap-2" style="display: none;">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            Download CSV
+                        </button>
+                    </div>
                 </div>
-                <table id="reviews-table">
-                    <thead>
-                        <tr>
-                            <th>User</th>
-                            <th>Rating</th>
-                            <th>Date</th>
-                            <th>Review</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Reviews will be populated by JavaScript -->
-                    </tbody>
-                </table>
+                <div class="p-6 pt-0">
+                    <div class="overflow-x-auto">
+                        <table id="reviews-table" class="w-full">
+                            <thead>
+                                <tr class="border-b border-border">
+                                    <th class="text-left p-3 font-medium text-muted-foreground">User</th>
+                                    <th class="text-left p-3 font-medium text-muted-foreground">Rating</th>
+                                    <th class="text-left p-3 font-medium text-muted-foreground">Date</th>
+                                    <th class="text-left p-3 font-medium text-muted-foreground">Review</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Reviews will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
 
-                <!-- Pagination -->
-                <div id="pagination" class="pagination">
-                    <!-- Pagination buttons will be populated by JavaScript -->
+                    <!-- Pagination -->
+                    <div id="pagination" class="flex items-center justify-center gap-2 pt-4 border-t border-border mt-4">
+                        <!-- Pagination buttons will be populated by JavaScript -->
+                    </div>
                 </div>
             </div>
         </section>
-    </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 mt-16">
+        <div class="container mx-auto px-4 py-8">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-2">
+                    <div class="h-6 w-6 rounded bg-primary flex items-center justify-center">
+                        <svg class="h-4 w-4 text-primary-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                    </div>
+                    <span class="font-semibold">Sentiplay</span>
+                </div>
+                <p class="text-sm text-muted-foreground">
+                    © 2025 Sentiplay. Platform analisis sentimen akademik untuk Google Play reviews.
+                </p>
+                <div class="flex items-center gap-2">
+                    <button class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-9 px-4" onclick="window.open('/docs', '_blank')">
+                        API Docs
+                    </button>
+                    <button class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-9 px-4" onclick="window.open('/redoc', '_blank')">
+                        ReDoc
+                    </button>
+                </div>
+            </div>
+        </div>
+    </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="/static/js/main.js"></script>
 </body>
 </html>

@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 """
-Test script untuk mengecek API Flask endpoint
+Test script untuk mengecek API FastAPI endpoint
 """
 
 import requests
 import json
 import time
 
-def test_flask_api():
-    """Test Flask API endpoints"""
+def test_fastapi_api():
+    """Test FastAPI API endpoints"""
     base_url = "http://127.0.0.1:5000"
     
-    print("=== Testing Flask API Endpoints ===")
+    print("=== Testing FastAPI Endpoints ===")
     
     # Test 1: Homepage
     print("1. Testing homepage...")
@@ -36,7 +36,7 @@ def test_flask_api():
         
         print(f"   Sending request: {payload}")
         response = requests.post(
-            f"{base_url}/scrape_reviews",
+            f"{base_url}/api/scrape",
             json=payload,
             timeout=30
         )
@@ -65,7 +65,7 @@ def test_flask_api():
         
         print(f"   Sending request with rating filter: {payload}")
         response = requests.post(
-            f"{base_url}/scrape_reviews",
+            f"{base_url}/api/scrape",
             json=payload,
             timeout=30
         )
@@ -83,12 +83,12 @@ def test_flask_api():
 
 if __name__ == "__main__":
     # Check if server is running first
-    print("Checking if Flask server is running...")
+    print("Checking if FastAPI server is running...")
     try:
         response = requests.get("http://127.0.0.1:5000/", timeout=5)
         print("✅ Server is running!")
-        test_flask_api()
+        test_fastapi_api()
     except Exception as e:
         print(f"❌ Server not accessible: {e}")
-        print("\nPlease make sure Flask server is running:")
-        print("python app.py")
+        print("\nPlease make sure FastAPI server is running:")
+        print("uvicorn app:app --host 0.0.0.0 --port 5000")

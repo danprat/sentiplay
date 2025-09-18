@@ -5,7 +5,7 @@ SentiPlay adalah aplikasi analisis sentimen untuk review aplikasi Android yang d
 
 ## Arsitektur Aplikasi
 - **Frontend**: Halaman `templates/index.html` menampilkan form, indikator progres, dan hasil analisis menggunakan HTML, CSS kustom, dan JavaScript untuk memanggil API.
-- **Backend**: `app.py` menjalankan Flask sebagai web server yang menyediakan endpoint REST, menjalankan thread scraping di background, serta menyajikan file statis.
+- **Backend**: `app.py` menjalankan FastAPI sebagai web server yang menyediakan endpoint REST, menjalankan thread scraping di background, serta menyajikan file statis.
 - **Scraper**: `scraper.py` menggunakan `google-play-scraper` guna mengambil metadata aplikasi dan review sesuai parameter yang diminta.
 - **Pemrosesan Teks**: `preprocessing.py` membersihkan kalimat, menghapus stopword, dan melakukan stemming dengan Sastrawi.
 - **Visualisasi & Statistik**: `visualization.py` mengolah ringkasan data, wordcloud, dan grafik distribusi rating.
@@ -13,7 +13,7 @@ SentiPlay adalah aplikasi analisis sentimen untuk review aplikasi Android yang d
 
 ## Alur Program
 1. Pengguna memasukkan App ID, bahasa, negara, batas jumlah review, filter rating, dan metode sorting melalui antarmuka web.
-2. Form memanggil `/api/scrape` (POST). Flask membuat session baru, membersihkan sesi lama, lalu menjalankan `scrape_reviews_background` di thread terpisah.
+2. Form memanggil `/api/scrape` (POST). FastAPI membuat session baru, membersihkan sesi lama, lalu menjalankan `scrape_reviews_background` di thread terpisah.
 3. Thread memanggil `PlayStoreScraper` untuk:
    - Mengambil metadata aplikasi (`get_app_details`).
    - Mengambil review sesuai filter (`scrape_reviews`).
@@ -80,13 +80,13 @@ flowchart TD
 2. (Opsional) Buat virtual environment: `python3 -m venv gplay_scraper_env` lalu aktifkan.
 3. Instal dependensi: `pip install -r requirements.txt`.
 4. Migrasi database: `python migrate_database.py` (akan membuat dan menyiapkan `data/reviews.db`).
-5. Jalankan aplikasi: `python app.py`.
+5. Jalankan aplikasi: `python app.py` (atau `uvicorn app:app --host 0.0.0.0 --port 5000`).
 6. Buka browser ke `http://localhost:5000`.
 
 ### Menjalankan dengan Docker
 1. Pastikan Docker dan Docker Compose terinstal.
 2. Bangun & jalankan: `docker-compose up --build`.
-3. Tunggu container Flask siap, kemudian akses `http://localhost:5000`.
+3. Tunggu container FastAPI siap, kemudian akses `http://localhost:5000`.
 4. Untuk Portainer, ikuti panduan `PORTAINER-DEPLOY.md` (copy stack YAML yang sudah disediakan).
 
 ### Mengoperasikan Aplikasi Web
@@ -114,6 +114,5 @@ flowchart TD
 ### Tips & Troubleshooting
 - Jika scraping gagal, periksa koneksi internet atau pastikan App ID valid.
 - Database dibersihkan otomatis setiap kali scraping (menyisakan maksimal 5 session terbaru, ≤3 hari). Pastikan storage cukup.
-- Untuk environment produksi, set `FLASK_ENV=production` agar server binding ke `0.0.0.0`.
+- Untuk environment produksi, set `FASTAPI_ENV=production` agar server binding ke `0.0.0.0`.
 - Wordcloud memerlukan data hasil preprocessing; jika kosong, periksa tabel `processed_reviews` atau dependency Sastrawi.
-
