@@ -204,9 +204,15 @@
             </div>
 
             <!-- Rating Chart -->
-            <div class="rating-chart-container">
+            <div class="rating-chart-container" style="display: none;">
                 <h3>📈 Rating Distribution</h3>
-                <img id="rating-chart" alt="Rating Distribution Chart" style="width: 100%; height: 300px;">
+                <canvas id="rating-chart-canvas" width="400" height="300" style="width: 100%;"></canvas>
+            </div>
+
+            <!-- Keyword Frequency Chart -->
+            <div class="keyword-chart-container" style="display: none;">
+                <h3>🔠 Kata Paling Umum</h3>
+                <canvas id="keyword-chart-canvas" width="400" height="300" style="width: 100%;"></canvas>
             </div>
 
             <!-- Reviews Table -->
@@ -239,6 +245,7 @@
         </section>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>

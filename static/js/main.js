@@ -4,6 +4,51 @@
 let currentSessionId = null;
 let currentPage = 1;
 let totalPages = 1;
+let ratingChartInstance = null;
+let keywordChartInstance = null;
+
+const ratingBarLabelsPlugin = {
+    id: 'ratingBarLabels',
+    afterDatasetsDraw(chart, _args, opts) {
+        const {ctx} = chart;
+        const dataset = chart.data.datasets?.[0];
+        const meta = chart.getDatasetMeta(0);
+        const labels = opts?.labels || [];
+        const percentages = opts?.percentages || [];
+
+        if (!dataset || !meta?.data) {
+            return;
+        }
+
+        ctx.save();
+        meta.data.forEach((bar, index) => {
+            const value = dataset.data?.[index];
+            if (!value) {
+                return;
+            }
+
+            const {y} = bar.tooltipPosition();
+            const barX = bar.x ?? chart.scales.x?.getPixelForValue(value) ?? 0;
+            const barBase = bar.base ?? chart.scales.x?.getPixelForValue(0) ?? 0;
+            const padding = 10;
+            const text = `${labels[index] ?? value} (${percentages[index] ?? '0.0'}%)`;
+
+            ctx.font = '600 12px "Inter", sans-serif';
+            ctx.fillStyle = '#0f172a';
+            const textWidth = ctx.measureText(text).width;
+            const chartRight = chart.chartArea?.right ?? barX + padding;
+            let textX = barX + padding;
+
+            if (textX + textWidth > chartRight) {
+                textX = chartRight - textWidth;
+            }
+
+            ctx.fillText(text, Math.max(textX, barBase + padding), y + 4);
+        });
+
+        ctx.restore();
+    }
+};
 
 // DOM Elements
 const scrapeForm = document.getElementById('scrape-form');
@@ -204,7 +249,6 @@ async function loadResults(sessionId) {
         await Promise.all([
             loadStatistics(sessionId),
             loadWordCloud(sessionId),
-            loadRatingChart(sessionId),
             loadReviews(sessionId)
         ]);
         
@@ -319,7 +363,9 @@ async function loadStatistics(sessionId) {
                 appInfoSection.style.display = 'none';
             }
         }
-        
+        renderRatingChart(stats.rating_distribution || {});
+        renderKeywordChart(stats.most_common_words || {});
+
     } catch (error) {
         console.error('Error loading statistics:', error);
     }
@@ -347,26 +393,224 @@ async function loadWordCloud(sessionId) {
     }
 }
 
-// Load rating chart
-async function loadRatingChart(sessionId) {
-    try {
-        const response = await fetch(`/api/rating-chart/${sessionId}`);
-        if (!response.ok) {
-            throw new Error('Failed to load rating chart');
-        }
-        
-        // Create object URL for the image
-        const blob = await response.blob();
-        const imageUrl = URL.createObjectURL(blob);
-        
-        // Update image source
-        const imgElement = document.getElementById('rating-chart');
-        imgElement.src = imageUrl;
-        imgElement.onload = () => URL.revokeObjectURL(imageUrl);
-        
-    } catch (error) {
-        console.error('Error loading rating chart:', error);
+function renderRatingChart(ratingDistribution) {
+    const canvas = document.getElementById('rating-chart-canvas');
+    if (!canvas || typeof Chart === 'undefined') {
+        return;
     }
+
+    const container = canvas.parentElement;
+    const ctx = canvas.getContext('2d');
+    const ratings = [5, 4, 3, 2, 1];
+    const counts = ratings.map((rating) => {
+        const value = ratingDistribution?.[rating] ?? ratingDistribution?.[String(rating)];
+        return typeof value === 'number' ? value : 0;
+    });
+    const total = counts.reduce((sum, value) => sum + value, 0);
+    const percentages = counts.map((count) => total ? ((count / total) * 100).toFixed(1) : '0.0');
+
+    if (total === 0) {
+        if (ratingChartInstance) {
+            ratingChartInstance.destroy();
+            ratingChartInstance = null;
+        }
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if (container) {
+            container.style.display = 'none';
+        }
+        return;
+    }
+
+    if (ratingChartInstance) {
+        ratingChartInstance.destroy();
+    }
+
+    const backgroundColors = ['#2ecc71', '#27ae60', '#f1c40f', '#e67e22', '#e74c3c'];
+
+    if (container) {
+        container.style.display = 'block';
+    }
+
+    let containerWidth = container ? container.clientWidth : 0;
+    if (!containerWidth || Number.isNaN(containerWidth)) {
+        containerWidth = 600;
+    }
+
+    // Fix canvas dimension to avoid runaway resizing
+    const chartHeight = 260;
+    canvas.width = containerWidth;
+    canvas.height = chartHeight;
+    canvas.style.width = '100%';
+    canvas.style.height = `${chartHeight}px`;
+
+    ratingChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ratings.map((rating) => `${rating} ★`),
+            datasets: [{
+                label: 'Jumlah ulasan',
+                data: counts,
+                backgroundColor: backgroundColors,
+                borderRadius: 12,
+                barThickness: 28,
+                hoverBackgroundColor: backgroundColors,
+                borderSkipped: false
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            maintainAspectRatio: false,
+            responsive: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: '#111827',
+                    titleColor: '#f9fafb',
+                    bodyColor: '#e5e7eb',
+                    borderColor: 'rgba(17, 24, 39, 0.2)',
+                    borderWidth: 1,
+                    callbacks: {
+                        label: (context) => {
+                            const value = context.parsed.x;
+                            const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
+                            return `${value} ulasan (${percentage}%)`;
+                        }
+                    }
+                },
+                ratingBarLabels: {
+                    labels: counts,
+                    percentages
+                }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    ticks: {
+                        precision: 0,
+                        color: '#6b7280',
+                        font: {
+                            size: 11,
+                            family: 'Inter'
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(148, 163, 184, 0.15)',
+                        borderDash: [3, 3]
+                    }
+                },
+                y: {
+                    ticks: {
+                        color: '#111827',
+                        font: {
+                            size: 12,
+                            weight: '600',
+                            family: 'Inter'
+                        }
+                    },
+                    grid: {
+                        display: false
+                    }
+                }
+            },
+            animation: false
+        },
+        plugins: [ratingBarLabelsPlugin]
+    });
+
+}
+
+function renderKeywordChart(wordStats) {
+    const canvas = document.getElementById('keyword-chart-canvas');
+    if (!canvas || typeof Chart === 'undefined') {
+        return;
+    }
+
+    const container = canvas.parentElement;
+    const entries = Object.entries(wordStats || {});
+
+    if (entries.length === 0) {
+        if (keywordChartInstance) {
+            keywordChartInstance.destroy();
+            keywordChartInstance = null;
+        }
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if (container) {
+            container.style.display = 'none';
+        }
+        return;
+    }
+
+    const labels = entries.map(([word]) => word);
+    const counts = entries.map(([, count]) => count);
+
+    if (keywordChartInstance) {
+        keywordChartInstance.destroy();
+    }
+
+    if (container) {
+        container.style.display = 'block';
+    }
+
+    const ctx = canvas.getContext('2d');
+    let containerWidth = container ? container.clientWidth : 0;
+    if (!containerWidth || Number.isNaN(containerWidth)) {
+        containerWidth = 600;
+    }
+
+    const baseHeight = 220;
+    const perBarHeight = 44;
+    const targetHeight = Math.min(320, Math.max(baseHeight, counts.length * perBarHeight));
+    canvas.width = containerWidth;
+    canvas.height = targetHeight;
+    canvas.style.width = '100%';
+    canvas.style.height = `${targetHeight}px`;
+    keywordChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [{
+                label: 'Frekuensi',
+                data: counts,
+                backgroundColor: '#5b8def',
+                borderRadius: 6,
+                barThickness: 40
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            responsive: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: (context) => {
+                            const value = context.parsed.y;
+                            return `${value} kemunculan`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        display: false
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        precision: 0
+                    }
+                }
+            },
+            animation: false
+        }
+    });
 }
 
 // Load reviews data
